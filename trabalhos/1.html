@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>
+        Primeiro Trabalho
+    </title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel='stylesheet' type='text/css' media='screen' href='../dist/style.css'>
+    <script src="../js/p5.min.js"></script>
+    <script type="text/javascript">
+        class Star { // classe que representa uma estrela
+            constructor(x, y, shimmer, size) {
+                this.x = x;
+                this.y = y;
+                this.shimmer = shimmer;
+                this.size = size;
+            }
+            update() {
+                this.shimmer = noise(this.x - deltaTime, this.y + deltaTime) * 255;
+            }
+            draw() {
+                noStroke();
+                fill(this.shimmer);
+                ellipse(this.x, this.y, this.size, this.size);
+            }
+        }
+
+        class WeirdPlanet { // Não tenho certeza se isso é um planeta ou uma estrela
+            constructor(x, y, innerRadius, outerRadiusMax, texture, minSideCount, maxSideCount) {
+                this.x = x;
+                this.y = y;
+                this.innerRadius = innerRadius;
+                this.outerRadiusMax = outerRadiusMax;
+                this.texture = texture;
+                this.sidesCount = 2;
+                this.maxSideCount = maxSideCount;
+                this.minSideCount = minSideCount;
+            }
+
+
+            update() {
+                let [mx, my] = relativeMouse();
+                let v = createVector(1, 0);
+                let u = createVector(mx, my);
+                rotate(v.angleBetween(u))
+                // even sides count based on mouse position between 4 and 8
+                this.sidesCount = floor(
+                    map(
+                        u.mag(), 0,
+                        this.outerRadiusMax, this.minSideCount, this.maxSideCount)
+                ) * 2;
+                this.outerRadius = map(u.mag(), 0, width / 2, this.innerRadius, this.outerRadiusMax);
+
+                this.starVetrices = [];
+                Array.from(Array(this.sidesCount).keys()).forEach(i => {
+                    let angle = map(i, 0, this.sidesCount, 0, TWO_PI);
+                    let r = map(i % 2, 0, 1, this.innerRadius, this.outerRadius);
+                    let x = r * cos(angle);
+                    let y = r * sin(angle);
+                    this.starVetrices.push([x, y]);
+                });
+            }
+            draw() {
+                beginShape();
+                texture(this.texture);
+                textureMode(NORMAL);
+                noStroke();
+                // apply image to star
+                this.starVetrices.forEach(([x, y]) => {
+                    let u = map(x, -this.outerRadiusMax, this.outerRadiusMax, 0, 1);
+                    let v = map(y, -this.outerRadiusMax, this.outerRadiusMax, 0, 1);
+                    vertex(x, y, u, v);
+                });
+                endShape(CLOSE);
+            }
+        }
+
+        class UFO { // classe que representa um UFO que voa em torno de um planeta
+            constructor(size, planet, texture) {
+                this.size = size;
+                this.texture = texture;
+                this.x = planet.x + planet.outerRadiusMax + this.size;
+                this.y = planet.y + planet.outerRadiusMax + this.size;
+                this.speed = PI / 200;
+                this.angle = 0;
+                // normal vector to the planet
+                this.normal = createVector(planet.x - this.x, planet.y - this.y);
+            }
+            update(planet) {
+                this.angle += this.speed;
+                // orbiting
+                this.x = planet.x + (planet.outerRadiusMax + this.size * 2) * cos(this.angle);
+                this.y = planet.y + (planet.outerRadiusMax + this.size * 2) * sin(this.angle);
+                // normal vector to the planet
+                this.normal = createVector(planet.x - this.x, planet.y - this.y);
+                this.normal.normalize();
+
+            }
+            draw() {
+                push(); // save current state
+                translate(this.x, this.y);
+                rotate(this.normal.heading() + PI * 1.5);
+                texture(this.texture);
+                textureMode(NORMAL);
+                beginShape();
+                vertex(-this.size, -this.size, 0, 0);
+                vertex(this.size, -this.size, 1, 0);
+                vertex(this.size, this.size, 1, 1);
+                vertex(-this.size, this.size, 0, 1);
+                endShape(CLOSE);
+                pop(); // restore previous matrix
+            }
+        }
+
+        class Alien { // Classe que representa um alien que anda sobre o planeta
+            constructor(size, planet, texture) {
+                this.size = size;
+                this.texture = texture;
+                this.x = planet.x + planet.innerRadius + this.size;
+                this.y = planet.y + planet.innerRadius + this.size;
+                this.speed = -PI / 200;
+                this.angle = 0;
+                // normal vector to the planet
+                this.normal = createVector(planet.x - this.x, planet.y - this.y);
+                this.orientation = 1;
+            }
+
+            update(planet) {
+                // get de radius of the planet in the current angle
+                let radius = planet.innerRadius + (planet.outerRadius - planet.innerRadius) * cos(this.angle);
+                // orbiting
+                this.x = planet.x + radius * cos(this.angle);
+                this.y = planet.y + radius * sin(this.angle);
+
+                // normal vector to the planet
+                this.normal = createVector(planet.x - this.x, planet.y - this.y);
+                this.normal.normalize();
+                this.angle += this.speed;
+                if (this.angle > TWO_PI) {
+                    this.angle = 0;
+                }
+            }
+
+            draw() {
+                push(); // save current state
+                translate(this.x, this.y);
+                rotate(this.normal.heading() + PI * 1.5);
+                texture(this.texture);
+                textureMode(NORMAL);
+                beginShape();
+                vertex(-this.size, -this.size, 0, 0);
+                vertex(this.size, -this.size, 1, 0);
+                vertex(this.size, this.size, 1, 1);
+                vertex(-this.size, this.size, 0, 1);
+                endShape(CLOSE);
+                pop(); // restore previous matrix
+            }
+        }
+
+        const relativeMouse = () => {
+            // get mouse position relative to the center of the canvas
+            let mx = mouseX;
+            let my = mouseY;
+            mx -= width / 2;
+            my -= height / 2;
+            return [mx, my];
+        }
+
+        let planet;
+        let ufo;
+        let alien;
+        let stars = [];
+
+        function preload() {
+            planet = new WeirdPlanet(0, 0,
+                200, 300,
+                loadImage('assets/trab1.jpg'),
+                2, 5);
+            ufo = new UFO(50, planet, loadImage('assets/ufo.png'));
+            alien = new Alien(50, planet, loadImage('assets/alien.png'));
+        }
+
+        function setup() {
+            createCanvas(800, 800, WEBGL);
+
+            Array.from({ length: 1000 }, () => {
+                stars.push(
+                    new Star(
+                        random(-width / 2, width / 2),
+                        random(-height / 2, height / 2),
+                        random(50, 255),
+                        random(1, 5)
+                    )
+                );
+            });
+        }
+
+        function draw() {
+            background(0);
+            stars.forEach(star => {
+                star.update();
+                star.draw();
+            });
+
+            planet.update();
+            planet.draw();
+
+            ufo.update(planet);
+            ufo.draw();
+
+            alien.update(planet);
+            alien.draw();
+        }
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <h1>
+            Polígonos Estrela
+        </h1>
+        <main>
+        </main>
+        <a href="/">
+            Voltar
+        </a>
+    </div>
+</body>
+
+</html>
