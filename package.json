@@ -1,0 +1,23 @@
+{
+    "name": "computacao-grafica",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "css:scss": "node-sass --output-style compressed -o dist src/scss",
+        "css:autoprefixer": "postcss -u autoprefixer -r dist/*.css",
+        "css:lint": "stylelint src/scss/*.scss  --custom-syntax postcss-scss",
+        "build:css": "npm run css:lint && npm run css:scss && npm run css:autoprefixer",
+        "watch:css": "onchange \"src/scss\" -- npm run build:css"
+    },
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "autoprefixer": "^10.4.12",
+        "node-sass": "^7.0.3",
+        "onchange": "^7.1.0",
+        "postcss-cli": "^10.0.0",
+        "postcss-scss": "^4.0.5",
+        "stylelint": "^14.12.1"
+    }
+}
