@@ -46,13 +46,15 @@
                 let v = createVector(1, 0);
                 let u = createVector(mx, my);
                 rotate(v.angleBetween(u))
-                // even sides count based on mouse position between 4 and 8
+                // even sides count based on mouse position between this.minSideCount and this.maxSideCount
                 this.sidesCount = floor(
                     map(
                         u.mag(), 0,
                         this.outerRadiusMax, this.minSideCount, this.maxSideCount)
                 ) * 2;
-                this.outerRadius = map(u.mag(), 0, width / 2, this.innerRadius, this.outerRadiusMax);
+                this.outerRadius = floor(
+                    map(u.mag(), 0, width / 2, this.innerRadius, this.outerRadiusMax)
+                );
 
                 this.starVetrices = [];
                 Array.from(Array(this.sidesCount).keys()).forEach(i => {
@@ -90,14 +92,12 @@
                 this.normal = createVector(planet.x - this.x, planet.y - this.y);
             }
             update(planet) {
-                this.angle += this.speed;
+                this.angle += this.speed * noise(this.x + this.y + millis()) * 3;
                 // orbiting
                 this.x = planet.x + (planet.outerRadiusMax + this.size * 2) * cos(this.angle);
                 this.y = planet.y + (planet.outerRadiusMax + this.size * 2) * sin(this.angle);
                 // normal vector to the planet
                 this.normal = createVector(planet.x - this.x, planet.y - this.y);
-                this.normal.normalize();
-
             }
             draw() {
                 push(); // save current state
@@ -138,7 +138,11 @@
                 // normal vector to the planet
                 this.normal = createVector(planet.x - this.x, planet.y - this.y);
                 this.normal.normalize();
-                this.angle += this.speed;
+                this.angle += this.speed * noise(this.angle +
+                    planet.x +
+                    this.x +
+                    planet.y +
+                    this.y);
                 if (this.angle > TWO_PI) {
                     this.angle = 0;
                 }
@@ -186,7 +190,7 @@
         function setup() {
             createCanvas(800, 800, WEBGL);
 
-            Array.from({ length: 1000 }, () => {
+            Array.from({ length: 500 }, () => {
                 stars.push(
                     new Star(
                         random(-width / 2, width / 2),
@@ -224,7 +228,7 @@
         </h1>
         <main>
         </main>
-        <a href="/">
+        <a class="link" href="/Computacao-Grafica">
             Voltar
         </a>
     </div>

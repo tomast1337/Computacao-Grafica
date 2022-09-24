@@ -60,25 +60,6 @@ body {
         padding: 1rem;
         border-radius: 25px;
     }
-
-    // remove all anchor styles
-    a {
-        font-size: 1rem;
-        text-decoration: none;
-        color: $primary;
-    }
-
-    a :hover {
-        color: $primary;
-    }
-
-    a :active {
-        color: $primary;
-    }
-
-    a :visited {
-        color: $primary;
-    }
 }
 
 .card {
@@ -88,6 +69,16 @@ body {
 
     p {
         color: $primary;
+    }
+}
+
+.link , .link:visited , .link:active {
+    color: $primary;
+    text-decoration: none;
+    font-size: 1.5rem;
+    font-weight: bold;
+    &:hover {
+        color: $accent;
     }
 }
 
