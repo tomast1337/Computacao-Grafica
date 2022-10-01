@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>
+        Primeiro Trabalho
+    </title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel='stylesheet' type='text/css' media='screen' href='../dist/style.css'>
+    <script src="../js/p5.min.js"></script>
+    <script type="text/javascript">
+        // Roller coaster loop build with bezier curves
+
+        function getPointInT(p1, p2, p3, p4, t) {
+            const tt = t * t;
+            const ttt = t * t * t;
+            const x = p1.x * (-ttt + 3 * tt - 3 * t + 1) +
+                p2.x * (3 * ttt - 6 * tt + 3 * t) +
+                p3.x * (-3 * ttt + 3 * tt) +
+                p4.x * ttt;
+
+            const y = p1.y * (-ttt + 3 * tt - 3 * t + 1) +
+                p2.y * (3 * ttt - 6 * tt + 3 * t) +
+                p3.y * (-3 * ttt + 3 * tt) +
+                p4.y * ttt;
+            return createVector(x, y);
+        }
+
+        function getPointNormalInT(p1, p2, p3, p4, t) {
+            const tt = t * t;
+            const x = p1.x * (-3 * tt + 6 * t - 3) +
+                p2.x * (9 * tt - 12 * t + 3) +
+                p3.x * (-9 * tt + 6 * t) +
+                p4.x * 3 * tt;
+            const y = p1.y * (-3 * tt + 6 * t - 3) +
+                p2.y * (9 * tt - 12 * t + 3) +
+                p3.y * (-9 * tt + 6 * t) +
+                p4.y * 3 * tt;
+            const vector = createVector(x, y);
+            return vector.normalize();
+        }
+
+        class RollerCoasterTrack {
+            /*
+                p1,p2,p3,p4 are the control points
+                precision is the number of points to be drawn
+                p2 and p3 moveable points
+            */
+            constructor(p1, p2, p3, p4, precision) {
+                this.p1 = p1;
+                this.p2 = p2;
+                this.p3 = p3;
+                this.p4 = p4;
+
+                this.p2Hover = false;
+                this.p3Hover = false;
+
+                this.precision = precision;
+                this.points = [];
+
+                // colors
+                // trackColor grey
+                this.trackColor = color(100, 100, 100);
+                // supportColor brown
+                this.supportColor = color(100, 50, 0);
+
+                this.controlPointSize = 50;
+
+            }
+
+            p2HoverToggle() {
+                this.p2Hover = !this.p2Hover;
+                console.log(`p2Hover: ${this.p2Hover}`);
+            }
+
+            p3HoverToggle() {
+                this.p3Hover = !this.p3Hover;
+                console.log(`p3Hover: ${this.p3Hover}`);
+            }
+
+
+            update() {
+                this.points = [];
+                const tStep = 1 / this.precision;
+                for (let t = 0; t <= 1; t += tStep) {
+                    this.points.push(getPointInT(this.p1, this.p2, this.p3, this.p4, t));
+                }
+
+                // check if mouse is over p2 or p3
+                const mouse = createVector(mouseX, mouseY);
+                const p2Dist = this.p2.dist(mouse);
+                const p3Dist = this.p3.dist(mouse);
+
+            }
+
+            draw() {
+                stroke(this.trackColor);
+                strokeWeight(20);
+                noFill();
+                beginShape();
+                for (let i = 0; i < this.points.length; i++) {
+                    vertex(this.points[i].x, this.points[i].y);
+                    point(this.points[i].x, this.points[i].y);
+                }
+                endShape();
+
+                // draw points
+                // p2
+                strokeWeight(this.controlPointSize);
+                if (this.p2Hover) stroke(255, 0, 0);
+                else stroke(this.supportColor);
+                point(this.p2.x, this.p2.y);
+
+                // p3
+                if (this.p3Hover) stroke(255, 0, 0);
+                else stroke(this.supportColor);
+                point(this.p3.x, this.p3.y);
+
+
+                // draw beams connecting each point to each other
+                strokeWeight(10);
+                stroke(this.supportColor);
+                for (let i = 0; i < this.points.length - 1; i++) {
+                    line(this.points[i].x, this.points[i].y, this.points[i + 1].x, this.points[i + 1].y);
+                }
+                
+                // draw beam connecting each point to the bottom of the screen
+                strokeWeight(20);
+                for (let i = 0; i < this.points.length; i++) {
+                    line(this.points[i].x, this.points[i].y, this.points[i].x, height);
+                }
+            }
+
+        }
+
+        class RollerCoasterCart {
+            constructor(track, texture) {
+                this.track = track;
+                this.position = createVector(0, 0);
+                this.normal = createVector(0, 0);
+                this.t = 0;
+                this.tStep = 0.01;
+
+                this.texture = texture;
+            }
+
+            update() {
+                this.position = getPointInT(this.track.p1, this.track.p2, this.track.p3, this.track.p4, this.t);
+                this.normal = getPointNormalInT(this.track.p1, this.track.p2, this.track.p3, this.track.p4, this.t);
+                this.t += this.tStep;
+                if (this.t > 1) this.t = 0;
+            }
+
+            draw() {
+                push();
+                translate(this.position.x, this.position.y);
+                rotate(this.normal.heading());
+                // img origin in the middle bottom
+                image(this.texture,
+                    this.texture.width / -2,
+                    -this.texture.height);
+                pop();
+            }
+        }
+
+        class ParkBackground {
+            constructor(texture) {
+                this.texture = texture
+            }
+
+            update() {
+
+            }
+
+            draw() {
+                // center the image
+                image(this.texture,
+                    width / 2 - this.texture.width / 2,
+                    -height / 2);
+            }
+
+        }
+
+        let track;
+        let cart;
+        let parkBackground;
+        const wSizes = {
+            width: 800,
+            height: 800
+        }
+
+        // On Mouse Drag move p2 and p3
+        function mouseDragged() {
+            // if mouse is over p2
+            if (dist(mouseX, mouseY, track.p2.x, track.p2.y) < track.controlPointSize / 2) {
+                track.p2.x = mouseX;
+                track.p2.y = mouseY;
+            }
+
+            // if mouse is over p3
+            if (dist(mouseX, mouseY, track.p3.x, track.p3.y) < track.controlPointSize / 2) {
+                track.p3.x = mouseX;
+                track.p3.y = mouseY;
+            }
+            console.log({
+                p2: track.p2,
+                p3: track.p3
+            });
+        }
+
+        function preload() {
+            let backgroundImg = loadImage('assets/RollerCoasterBackGround.jpg');
+            let cartTexture = loadImage('assets/RollerCoasterCart.png');
+            track = new RollerCoasterTrack(
+                createVector(-wSizes.width / 2, wSizes.height / 2), // bottom left - start of the track
+                createVector(-wSizes.width / 2 + 100, -wSizes.height / 2 + 100), // top left - control point 2
+                createVector(wSizes.width / 2 - 100, -wSizes.height / 2 + 100), // top right - control point 1
+
+                createVector(wSizes.width / 2, wSizes.height / 2), // bottom right - end of the track
+                10
+            );
+            cart = new RollerCoasterCart(track, cartTexture);
+            parkBackground = new ParkBackground(backgroundImg);
+            // sef frame rate to 1
+            //frameRate(1);
+        }
+
+        function setup() {
+            createCanvas(wSizes.width,
+                wSizes.height,
+                WEBGL);
+            track.update();
+        }
+
+        function draw() {
+            background(255);
+
+            parkBackground.update();
+            parkBackground.draw();
+
+            track.update();
+            track.draw();
+
+            cart.update();
+            cart.draw();
+
+
+        }
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <h1>
+            Curva de Bezier Quadrática
+        </h1>
+        <main>
+        </main>
+        <a class="link" href="/Computacao-Grafica">
+            Voltar
+        </a>
+    </div>
+</body>
+
+</html>

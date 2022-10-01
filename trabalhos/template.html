@@ -5,19 +5,52 @@
     <meta charset='utf-8'>
     <meta http-equiv='X-UA-Compatible' content='IE=edge'>
     <title>
-        
+
     </title>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <link rel='stylesheet' type='text/css' media='screen' href='../dist/style.css'>
     <script src="../js/p5.min.js"></script>
     <script type="text/javascript">
 
-        function setup() {
-            createCanvas(800, 600);
+        const wSizes = {
+            width: 800,
+            height: 600
         }
 
+        function setup() {
+            createCanvas(wSizes.width,
+                wSizes.height,
+                WEBGL);
+        }
+
+
+
         function draw() {
-            background(200);
+            background(255);
+            // bottom left
+            const p1 = createVector(-wSizes.width / 2, wSizes.height / 2); 
+            
+            // top right
+            const p2 = createVector(wSizes.width / 2, -wSizes.height / 2);
+            
+            // top left
+            const p3 = createVector(-wSizes.width / 2, -wSizes.height / 2); 
+            
+            // bottom right
+            const p4 = createVector(wSizes.width / 2, wSizes.height/ 2); 
+
+            // draw points
+            stroke('red');
+            strokeWeight(100);
+            point(p1.x, p1.y); // start
+            point(p4.x, p4.y); // end
+
+            // draw control points
+            stroke('blue');
+            strokeWeight(100);
+            //point(p2.x, p2.y);
+            point(p3.x, p3.y);
+
         }
     </script>
 </head>
