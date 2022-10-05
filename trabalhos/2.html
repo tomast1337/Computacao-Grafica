@@ -5,7 +5,7 @@
     <meta charset='utf-8'>
     <meta http-equiv='X-UA-Compatible' content='IE=edge'>
     <title>
-        Primeiro Trabalho
+        Segundo Trabalho
     </title>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <link rel='stylesheet' type='text/css' media='screen' href='../dist/style.css'>
@@ -42,6 +42,89 @@
             return vector.normalize();
         }
 
+        class MoveablePoint {
+            constructor(x, y, radius, lockX, lockY) {
+                this.pos = createVector(x, y);
+                this.dragging = false; // Is the object being dragged?
+                this.rollover = false; // Is the mouse over the ellipse?
+                this.lockX = lockX; // Lock the x position
+                this.lockY = lockY; // Lock the y position
+                this.radius = radius; // Radius of the circle
+
+                this.offsetX = 0; // Mouseclick X offset
+                this.offsetY = 0; // Mouseclick Y offset
+            }
+
+            dist(other) {
+                return new p5.Vector.dist(this.pos, other);
+            }
+
+            over() {
+                // fix the mouse position for webgl coordinates
+                const mouse_X = mouseX - width / 2;
+                const mouse_Y = mouseY - height / 2;
+
+                // Is mouse over object
+                if (mouse_X > this.pos.x - this.radius && 
+                mouse_X < this.pos.x + this.radius &&
+                mouse_Y > this.pos.y - this.radius &&
+                mouse_Y < this.pos.y + this.radius) {
+                    this.rollover = true;
+                } else {
+                    this.rollover = false;
+                }
+            }
+
+            update() {
+                // fix the mouse position for webgl coordinates
+                const mouse_X = mouseX - width / 2;
+                const mouse_Y = mouseY - height / 2;
+
+                if (this.dragging) {
+                    if (!this.lockX) { // If not locked on the x axis
+                        this.pos.x = mouse_X + this.offsetX;
+                    }
+                    if (!this.lockY) { // If not locked on the y axis
+                        this.pos.y = mouse_Y + this.offsetY;
+                    }
+                }
+            }
+
+            draw() {
+                stroke(0);
+                strokeWeight(1);
+                // Different fill based on state
+                if (this.dragging) {
+                    fill(color(0, 200, 0))
+                } else if (this.rollover) {
+                    fill(color(200, 200, 200))
+                } else {
+                    fill(color(0, 255, 0))
+                }
+                ellipse(this.pos.x, this.pos.y, this.radius, this.radius);
+            }
+
+            pressed() {
+                // fix the mouse position for webgl coordinates
+                const mouse_X = mouseX - width / 2;
+                const mouse_Y = mouseY - height / 2;
+
+
+                // Did I click on the circle?
+                if (mouse_X > this.pos.x - this.radius && mouse_X < this.pos.x + this.radius && mouse_Y > this.pos.y - this.radius && mouse_Y < this.pos.y + this.radius) {
+                    this.dragging = true;
+                    // If so, keep track of relative location of click to corner of rectangle
+                    this.offsetX = this.pos.x - mouse_X;
+                    this.offsetY = this.pos.y - mouse_Y;
+                }
+            }
+
+            released() {
+                // Quit dragging
+                this.dragging = false;
+            }
+        }
+
         class RollerCoasterTrack {
             /*
                 p1,p2,p3,p4 are the control points
@@ -49,13 +132,10 @@
                 p2 and p3 moveable points
             */
             constructor(p1, p2, p3, p4, precision) {
-                this.p1 = p1;
-                this.p2 = p2;
-                this.p3 = p3;
-                this.p4 = p4;
-
-                this.p2Hover = false;
-                this.p3Hover = false;
+                this.p1 = new MoveablePoint(p1.x, p1.y, 50, true, false);
+                this.p2 = new MoveablePoint(p2.x, p2.y, 50, false, false);
+                this.p3 = new MoveablePoint(p3.x, p3.y, 50, false, false);
+                this.p4 = new MoveablePoint(p4.x, p4.y, 50, true, false);
 
                 this.precision = precision;
                 this.points = [];
@@ -65,27 +145,13 @@
                 this.trackColor = color(100, 100, 100);
                 // supportColor brown
                 this.supportColor = color(100, 50, 0);
-
-                this.controlPointSize = 50;
-
             }
-
-            p2HoverToggle() {
-                this.p2Hover = !this.p2Hover;
-                console.log(`p2Hover: ${this.p2Hover}`);
-            }
-
-            p3HoverToggle() {
-                this.p3Hover = !this.p3Hover;
-                console.log(`p3Hover: ${this.p3Hover}`);
-            }
-
 
             update() {
                 this.points = [];
                 const tStep = 1 / this.precision;
                 for (let t = 0; t <= 1; t += tStep) {
-                    this.points.push(getPointInT(this.p1, this.p2, this.p3, this.p4, t));
+                    this.points.push(getPointInT(this.p1.pos, this.p2.pos, this.p3.pos, this.p4.pos, t));
                 }
 
                 // check if mouse is over p2 or p3
@@ -93,6 +159,11 @@
                 const p2Dist = this.p2.dist(mouse);
                 const p3Dist = this.p3.dist(mouse);
 
+                //update control points
+                this.p1.update();
+                this.p2.update();
+                this.p3.update();
+                this.p4.update();
             }
 
             draw() {
@@ -106,33 +177,46 @@
                 }
                 endShape();
 
-                // draw points
-                // p2
-                strokeWeight(this.controlPointSize);
-                if (this.p2Hover) stroke(255, 0, 0);
-                else stroke(this.supportColor);
-                point(this.p2.x, this.p2.y);
-
-                // p3
-                if (this.p3Hover) stroke(255, 0, 0);
-                else stroke(this.supportColor);
-                point(this.p3.x, this.p3.y);
-
-
                 // draw beams connecting each point to each other
                 strokeWeight(10);
                 stroke(this.supportColor);
                 for (let i = 0; i < this.points.length - 1; i++) {
                     line(this.points[i].x, this.points[i].y, this.points[i + 1].x, this.points[i + 1].y);
                 }
-                
+
                 // draw beam connecting each point to the bottom of the screen
                 strokeWeight(20);
                 for (let i = 0; i < this.points.length; i++) {
                     line(this.points[i].x, this.points[i].y, this.points[i].x, height);
                 }
+
+                // draw control points
+                this.p1.draw();
+                this.p2.draw();
+                this.p3.draw();
+                this.p4.draw();
             }
 
+            pressed() {
+                this.p1.pressed();
+                this.p2.pressed();
+                this.p3.pressed();
+                this.p4.pressed();
+            }
+
+            released() {
+                this.p1.released();
+                this.p2.released();
+                this.p3.released();
+                this.p4.released();
+            }
+
+            over() {
+                this.p1.over();
+                this.p2.over();
+                this.p3.over();
+                this.p4.over();
+            }
         }
 
         class RollerCoasterCart {
@@ -147,8 +231,16 @@
             }
 
             update() {
-                this.position = getPointInT(this.track.p1, this.track.p2, this.track.p3, this.track.p4, this.t);
-                this.normal = getPointNormalInT(this.track.p1, this.track.p2, this.track.p3, this.track.p4, this.t);
+                this.position = getPointInT(this.track.p1.pos,
+                 this.track.p2.pos,
+                  this.track.p3.pos,
+                   this.track.p4.pos,
+                    this.t);
+                this.normal = getPointNormalInT(this.track.p1.pos,
+                 this.track.p2.pos,
+                  this.track.p3.pos,
+                   this.track.p4.pos,
+                    this.t);
                 this.t += this.tStep;
                 if (this.t > 1) this.t = 0;
             }
@@ -186,28 +278,18 @@
         let track;
         let cart;
         let parkBackground;
+
         const wSizes = {
             width: 800,
             height: 800
         }
 
-        // On Mouse Drag move p2 and p3
-        function mouseDragged() {
-            // if mouse is over p2
-            if (dist(mouseX, mouseY, track.p2.x, track.p2.y) < track.controlPointSize / 2) {
-                track.p2.x = mouseX;
-                track.p2.y = mouseY;
-            }
+        function mousePressed() {
+            track.pressed();
+        }
 
-            // if mouse is over p3
-            if (dist(mouseX, mouseY, track.p3.x, track.p3.y) < track.controlPointSize / 2) {
-                track.p3.x = mouseX;
-                track.p3.y = mouseY;
-            }
-            console.log({
-                p2: track.p2,
-                p3: track.p3
-            });
+        function mouseReleased() {
+            track.released();
         }
 
         function preload() {
@@ -240,6 +322,7 @@
             parkBackground.update();
             parkBackground.draw();
 
+            track.over();
             track.update();
             track.draw();
 

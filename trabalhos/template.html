@@ -12,45 +12,120 @@
     <script src="../js/p5.min.js"></script>
     <script type="text/javascript">
 
+        class MoveablePoint {
+            constructor(x, y, radius, lockX, lockY) {
+                this.pos = createVector(x, y);
+                this.dragging = false; // Is the object being dragged?
+                this.rollover = false; // Is the mouse over the ellipse?
+                this.lockX = lockX; // Lock the x position
+                this.lockY = lockY; // Lock the y position
+                this.radius = radius; // Radius of the circle
+
+                this.offsetX = 0; // Mouseclick X offset
+                this.offsetY = 0; // Mouseclick Y offset
+            }
+            over() {
+                // Is mouse over object
+                if (mouseX > this.pos.x - this.radius && mouseX < this.pos.x + this.radius && mouseY > this.pos.y - this.radius && mouseY < this.pos.y + this.radius) {
+                    this.rollover = true;
+                } else {
+                    this.rollover = false;
+                }
+            }
+
+            update() {
+                 // fix the mouse position for webgl coordinates
+                 const mouse_X = mouseX - width / 2;
+                const mouse_Y = mouseY - height / 2;
+
+                if (this.dragging) {
+                    if (!this.lockX) { // If not locked on the x axis
+                        this.pos.x = mouse_X + this.offsetX;
+                    }
+                    if (!this.lockY) { // If not locked on the y axis
+                        this.pos.y = mouse_Y + this.offsetY;
+                    }
+                }
+            }
+
+            draw() {
+                stroke(0);
+                // Different fill based on state
+                if (this.dragging) {
+                    fill(50);
+                } else if (this.rollover) {
+                    fill(100);
+                } else {
+                    fill(175, 200);
+                }
+                ellipse(this.pos.x, this.pos.y, this.radius, this.radius);
+            }
+
+            pressed() {
+                // fix the mouse position for webgl coordinates
+                const mouse_X = mouseX - width / 2;
+                const mouse_Y = mouseY - height / 2;
+
+
+                // Did I click on the circle?
+                if (mouse_X > this.pos.x - this.radius && mouse_X < this.pos.x + this.radius && mouse_Y > this.pos.y - this.radius && mouse_Y < this.pos.y + this.radius) {
+                    this.dragging = true;
+                    // If so, keep track of relative location of click to corner of rectangle
+                    this.offsetX = this.pos.x - mouse_X;
+                    this.offsetY = this.pos.y - mouse_Y;
+                }
+            }
+            released() {
+                // Quit dragging
+                this.dragging = false;
+            }
+        }
+
+
         const wSizes = {
             width: 800,
             height: 600
         }
 
+        let points = [];
+
         function setup() {
             createCanvas(wSizes.width,
                 wSizes.height,
                 WEBGL);
+            for (let i = 0; i < 1; i++) {
+                points.push(new MoveablePoint(
+                    random(0, wSizes.width-(wSizes.width/2)),
+                    random(0, wSizes.height-(wSizes.height/2)),
+                    20,
+                    false,
+                    false
+                ));
+            }
         }
 
 
 
         function draw() {
             background(255);
-            // bottom left
-            const p1 = createVector(-wSizes.width / 2, wSizes.height / 2); 
-            
-            // top right
-            const p2 = createVector(wSizes.width / 2, -wSizes.height / 2);
-            
-            // top left
-            const p3 = createVector(-wSizes.width / 2, -wSizes.height / 2); 
-            
-            // bottom right
-            const p4 = createVector(wSizes.width / 2, wSizes.height/ 2); 
+            for (let i = 0; i < points.length; i++) {
+                points[i].over();
+                points[i].update();
+                points[i].draw();
+            }
 
-            // draw points
-            stroke('red');
-            strokeWeight(100);
-            point(p1.x, p1.y); // start
-            point(p4.x, p4.y); // end
+        }
 
-            // draw control points
-            stroke('blue');
-            strokeWeight(100);
-            //point(p2.x, p2.y);
-            point(p3.x, p3.y);
+        function mousePressed() {
+            for (let i = 0; i < points.length; i++) {
+                points[i].pressed();
+            }
+        }
 
+        function mouseReleased() {
+            for (let i = 0; i < points.length; i++) {
+                points[i].released();
+            }
         }
     </script>
 </head>
