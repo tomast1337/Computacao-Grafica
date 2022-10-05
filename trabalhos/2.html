@@ -242,7 +242,7 @@
                    this.track.p4.pos,
                     this.t);
                 this.t += this.tStep;
-                if (this.t > 1) this.t = 0;
+                if (this.t > 1.25) this.t = -0.25;
             }
 
             draw() {
@@ -339,6 +339,9 @@
         <h1>
             Curva de Bezier Quadrática
         </h1>
+        <h2>
+            Arraste os pontos verdes de controle para alterar a curva.
+        </h2>
         <main>
         </main>
         <a class="link" href="/Computacao-Grafica">
