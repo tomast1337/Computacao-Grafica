@@ -11,9 +11,40 @@
     <link rel='stylesheet' type='text/css' media='screen' href='../dist/style.css'>
     <script src="../js/p5.min.js"></script>
     <script type="text/javascript">
-        // Roller coaster loop build with bezier curves
-
         function getPointInT(p1, p2, p3, p4, t) {
+            /* Para chegar na forma abaixo comecei com a forma da interpolação linear aka lerps
+            como a vista em aula:
+            A = Lerps entre p1 e p2 em t
+            B = Lerps entre p2 e p3 em t
+            C = Lerps entre p3 e p4 em t
+            D = Lerps entre A e B em t
+            E = Lerps entre B e C em t
+            Point = Lerps entre D e E em t
+
+            A definição de lerp é a seguinte onde X e Y são pontos constantes e t é um valor entre 0 e 1
+            Lerps(t) = (1 - t) * X + t * Y
+
+            Escrevendo a função lerp para sua função matemática temos
+
+            A = (1-t)*p1 + t*p2
+            B = (1-t)*p2 + t*p3
+            C = (1-t)*p3 + t*p4
+            D = (1-t)*A + t*B
+            E = (1-t)*B + t*C
+            Point = (1-t)*D + t*E
+
+            Juntando tudo ficamos com
+            point = (1-t)^3*p1 + 3*(1-t)^2*t*p2 + 3*(1-t)*t^2*p3 + t^3*p4
+        
+            E por fim simplificando separando os polinômios de t^3, t^2, t e 1
+            point = p1( -t³+3t²-3t+1 ) +
+                    p2( 3t³-6t²+3t ) +
+                    p3( -3t³+3t² ) +
+                    p4( t³ )
+
+            é uma interpretação diferente da vista em aula utilizando a interpolação linear,
+            mas o resultado é o mesmo. é o melhor é que é mais fácil de deriva.
+            */
             const tt = t * t;
             const ttt = t * t * t;
             const x = p1.x * (-ttt + 3 * tt - 3 * t + 1) +
@@ -25,10 +56,12 @@
                 p2.y * (3 * ttt - 6 * tt + 3 * t) +
                 p3.y * (-3 * ttt + 3 * tt) +
                 p4.y * ttt;
+
+            // y = v1 * (-t³ + 3t² - 3t + 1) + v2 * (3t³ - 6t² + 3t) + v3 * (-3t³ + 3t²) + v4 * (t³)
             return createVector(x, y);
         }
 
-        function getPointNormalInT(p1, p2, p3, p4, t) {
+        function getPointNormalInT(p1, p2, p3, p4, t) { // Derivative of the bezier curve
             const tt = t * t;
             const x = p1.x * (-3 * tt + 6 * t - 3) +
                 p2.x * (9 * tt - 12 * t + 3) +
@@ -38,6 +71,9 @@
                 p2.y * (9 * tt - 12 * t + 3) +
                 p3.y * (-9 * tt + 6 * t) +
                 p4.y * 3 * tt;
+
+            // y = v1 * (-3t² + 6t - 3) + v2 * (9t² - 12t + 3) + v3 * (-9t² + 6t) + v4 * 3t²
+
             const vector = createVector(x, y);
             return vector.normalize();
         }
@@ -65,10 +101,10 @@
                 const mouse_Y = mouseY - height / 2;
 
                 // Is mouse over object
-                if (mouse_X > this.pos.x - this.radius && 
-                mouse_X < this.pos.x + this.radius &&
-                mouse_Y > this.pos.y - this.radius &&
-                mouse_Y < this.pos.y + this.radius) {
+                if (mouse_X > this.pos.x - this.radius &&
+                    mouse_X < this.pos.x + this.radius &&
+                    mouse_Y > this.pos.y - this.radius &&
+                    mouse_Y < this.pos.y + this.radius) {
                     this.rollover = true;
                 } else {
                     this.rollover = false;
@@ -232,14 +268,14 @@
 
             update() {
                 this.position = getPointInT(this.track.p1.pos,
-                 this.track.p2.pos,
-                  this.track.p3.pos,
-                   this.track.p4.pos,
+                    this.track.p2.pos,
+                    this.track.p3.pos,
+                    this.track.p4.pos,
                     this.t);
                 this.normal = getPointNormalInT(this.track.p1.pos,
-                 this.track.p2.pos,
-                  this.track.p3.pos,
-                   this.track.p4.pos,
+                    this.track.p2.pos,
+                    this.track.p3.pos,
+                    this.track.p4.pos,
                     this.t);
                 this.t += this.tStep;
                 if (this.t > 1.25) this.t = -0.25;
