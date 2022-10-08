@@ -69,9 +69,9 @@ class Cubos(BasicOpenGL):
         ]
         
         
-        if mouseClick == 1: # Left click
+        if mouseClick & 1: # Left click
             self.camera[2] += 1
-        elif mouseClick == 4: # Right click
+        elif mouseClick & 4: # Right click
             self.camera[2] -= 1
 
         self.camera[0] = mousePos[0]/100
