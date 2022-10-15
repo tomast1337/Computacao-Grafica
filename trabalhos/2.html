@@ -133,9 +133,20 @@
                 if (this.dragging) {
                     fill(color(0, 200, 0))
                 } else if (this.rollover) {
-                    fill(color(200, 200, 200))
+                    const green = 255 - this.pos.y * 255 / height;
+                    const blue = 255 - this.pos.y * 255 / height;
+                    const red = 255 - this.pos.y * 255 / height * 0.5;
+                    fill(color(red, green, blue));
                 } else {
-                    fill(color(0, 255, 0))
+
+                    const green = 255 - this.pos.y * 255 / height;
+                    const blue = 100 - this.pos.y * 100 / height;
+
+                    if (this.lockX || this.lockY) {
+                        fill(color(200, green, blue))
+                    } else {
+                        fill(color(0, green, blue))
+                    }
                 }
                 ellipse(this.pos.x, this.pos.y, this.radius, this.radius);
             }
@@ -168,10 +179,10 @@
                 p2 and p3 moveable points
             */
             constructor(p1, p2, p3, p4, precision) {
-                this.p1 = new MoveablePoint(p1.x, p1.y, 50, true, false);
-                this.p2 = new MoveablePoint(p2.x, p2.y, 50, false, false);
-                this.p3 = new MoveablePoint(p3.x, p3.y, 50, false, false);
-                this.p4 = new MoveablePoint(p4.x, p4.y, 50, true, false);
+                this.p1 = new MoveablePoint(p1.x, p1.y, 25, true, false);
+                this.p2 = new MoveablePoint(p2.x, p2.y, 25, false, false);
+                this.p3 = new MoveablePoint(p3.x, p3.y, 25, false, false);
+                this.p4 = new MoveablePoint(p4.x, p4.y, 25, true, false);
 
                 this.precision = precision;
                 this.points = [];
@@ -204,7 +215,7 @@
 
             draw() {
                 stroke(this.trackColor);
-                strokeWeight(20);
+                strokeWeight(10);
                 noFill();
                 beginShape();
                 for (let i = 0; i < this.points.length; i++) {
@@ -214,14 +225,14 @@
                 endShape();
 
                 // draw beams connecting each point to each other
-                strokeWeight(10);
+                strokeWeight(5);
                 stroke(this.supportColor);
                 for (let i = 0; i < this.points.length - 1; i++) {
                     line(this.points[i].x, this.points[i].y, this.points[i + 1].x, this.points[i + 1].y);
                 }
 
                 // draw beam connecting each point to the bottom of the screen
-                strokeWeight(20);
+                strokeWeight(5);
                 for (let i = 0; i < this.points.length; i++) {
                     line(this.points[i].x, this.points[i].y, this.points[i].x, height);
                 }
@@ -256,39 +267,51 @@
         }
 
         class RollerCoasterCart {
-            constructor(track, texture) {
-                this.track = track;
+            constructor(tracks, texture, scale) {
+                this.tracks = tracks;
                 this.position = createVector(0, 0);
                 this.normal = createVector(0, 0);
                 this.t = 0;
                 this.tStep = 0.01;
+                this.maxT = tracks.length;
+
+                this.scale = scale;
 
                 this.texture = texture;
             }
 
             update() {
-                this.position = getPointInT(this.track.p1.pos,
-                    this.track.p2.pos,
-                    this.track.p3.pos,
-                    this.track.p4.pos,
-                    this.t);
-                this.normal = getPointNormalInT(this.track.p1.pos,
-                    this.track.p2.pos,
-                    this.track.p3.pos,
-                    this.track.p4.pos,
-                    this.t);
+                const currentTrack = this.tracks[Math.floor(this.t)];
+                const current_t_step = this.t - Math.floor(this.t);
+
+                this.position = getPointInT(currentTrack.p1.pos,
+                    currentTrack.p2.pos, currentTrack.p3.pos,
+                    currentTrack.p4.pos, current_t_step);
+
+                this.normal = getPointNormalInT(currentTrack.p1.pos,
+                    currentTrack.p2.pos, currentTrack.p3.pos,
+                    currentTrack.p4.pos, current_t_step);
+
                 this.t += this.tStep;
-                if (this.t > 1.25) this.t = -0.25;
+
+                if (this.t > this.maxT) this.t = 0;
             }
 
             draw() {
                 push();
-                translate(this.position.x, this.position.y);
-                rotate(this.normal.heading());
                 // img origin in the middle bottom
-                image(this.texture,
-                    this.texture.width / -2,
-                    -this.texture.height);
+                translate(this.position.x, this.position.y);
+
+                // rotate the cart to the normal
+                rotate(this.normal.heading());
+
+                // scale the cart
+                scale(this.scale);
+
+                translate(-this.texture.width / 2, -this.texture.height);
+                // draw the cart
+                image(this.texture, 0, 0);
+
                 pop();
             }
         }
@@ -311,45 +334,92 @@
 
         }
 
-        let track;
-        let cart;
-        let parkBackground;
+        class Ground {
+            constructor(pointCount, seed, maxheight, width) {
+                this.points = [];
+                noiseSeed(seed);
+                for (let i = 0; i < pointCount+1; i += 1) {
+                    const y = noise(i*20) * 100 + maxheight;
+                    const x = map(i, 0, pointCount, 0, width) - width / 2;
+                    console.log(x, y, { i, pointCount, width });
+                    this.points.push(createVector(x, y));
+                }
+            }
 
-        const wSizes = {
-            width: 800,
-            height: 800
+            draw() {
+                noStroke(0);
+                fill(126, 200, 0);
+                beginShape();
+                vertex(-width, height);
+                for (let i = 0; i < this.points.length; i++) {
+                    vertex(this.points[i].x, this.points[i].y);
+                }
+                vertex(width, height);
+                endShape();
+            }
         }
 
+
+
+        let tracks = [];
+        let cart;
+        let parkBackground;
+        let ground;
+
+        const wSizes = { width: 800, height: 800 }
+
         function mousePressed() {
-            track.pressed();
+            tracks.forEach(t => { t.pressed(); });
         }
 
         function mouseReleased() {
-            track.released();
+            tracks.forEach(t => { t.released(); });
         }
 
         function preload() {
             let backgroundImg = loadImage('assets/RollerCoasterBackGround.jpg');
             let cartTexture = loadImage('assets/RollerCoasterCart.png');
-            track = new RollerCoasterTrack(
-                createVector(-wSizes.width / 2, wSizes.height / 2), // bottom left - start of the track
-                createVector(-wSizes.width / 2 + 100, -wSizes.height / 2 + 100), // top left - control point 2
-                createVector(wSizes.width / 2 - 100, -wSizes.height / 2 + 100), // top right - control point 1
+            // for 1..3
+            Array.from(Array(3).keys()).forEach(i => {
+                // divide the canvas in 3 parts
+                const trackStart = createVector(wSizes.width / 3 * i, wSizes.height / 2);
+                const trackEnd = createVector(wSizes.width / 3 * (i + 1), wSizes.height / 2);
+                const track_len = trackStart.dist(trackEnd);
+                const trackControl1x = p5.Vector.lerp(trackStart, trackEnd, 0.25).x;
+                const trackControl2x = p5.Vector.lerp(trackStart, trackEnd, 0.75).x;
 
-                createVector(wSizes.width / 2, wSizes.height / 2), // bottom right - end of the track
-                10
-            );
-            cart = new RollerCoasterCart(track, cartTexture);
+                const trackControl1 = createVector(trackControl1x, wSizes.width / 1.5);
+                const trackControl2 = createVector(trackControl2x, wSizes.width / 4);
+
+                // transform the points to gl coordinates
+                trackStart.y = trackStart.y - wSizes.height / 2;
+                trackEnd.y = trackEnd.y - wSizes.height / 2;
+                trackControl1.y = trackControl1.y - wSizes.height / 2;
+                trackControl2.y = trackControl2.y - wSizes.height / 2;
+
+                trackStart.x = trackStart.x - wSizes.width / 2;
+                trackEnd.x = trackEnd.x - wSizes.width / 2;
+                trackControl1.x = trackControl1.x - wSizes.width / 2;
+                trackControl2.x = trackControl2.x - wSizes.width / 2;
+
+                tracks.push(new RollerCoasterTrack(
+                    trackStart,
+                    trackControl1,
+                    trackControl2,
+                    trackEnd,
+                    10));
+            });
+            cart = new RollerCoasterCart(tracks, cartTexture, 2 / 5);
             parkBackground = new ParkBackground(backgroundImg);
-            // sef frame rate to 1
-            //frameRate(1);
+            let seed = new Date();
+
+            ground = new Ground(10, seed, 100, wSizes.width);
+            console.log(ground);
         }
 
         function setup() {
-            createCanvas(wSizes.width,
-                wSizes.height,
-                WEBGL);
-            track.update();
+            createCanvas(wSizes.width, wSizes.height, WEBGL);
+            tracks.forEach(t => { t.update(); });
         }
 
         function draw() {
@@ -358,14 +428,12 @@
             parkBackground.update();
             parkBackground.draw();
 
-            track.over();
-            track.update();
-            track.draw();
+            ground.draw();
+
+            tracks.forEach(t => { t.over(); t.update(); t.draw(); });
 
             cart.update();
             cart.draw();
-
-
         }
     </script>
 </head>
