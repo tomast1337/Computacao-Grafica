@@ -1,11 +1,12 @@
+import ctypes
+import logging
 from math import cos, sin
+
 import numpy as np
 import sdl2
+from basic import BasicOpenGL
 from OpenGL.GL import *
 from OpenGL.GLU import *
-from basic import BasicOpenGL
-import logging
-import ctypes
 
 PI = 3.1415926535897932384626433832795
 

@@ -1,0 +1,26 @@
+{
+    "cSpell.words": [
+        "DOUBLEBUFFER",
+        "Fullscreen",
+        "FULLSCREEN",
+        "MULTISAMPLE",
+        "OPENGL",
+        "vsync",
+        "WINDOWPOS",
+        "multisampling",
+        "fullscreen",
+        "Translatef",
+        "glTranslatef",
+        "glRotatef",
+        "glColor3f",
+        "glBegin",
+        "glEnd",
+        "SDL_KEYDOWN",
+        "SDL_KEYUP",
+        "SDL_QUIT",
+        "SDLK_ESCAPE",
+        "keysym",
+        "SCANCODE",
+    ],
+    "python.formatting.provider": "black"
+}

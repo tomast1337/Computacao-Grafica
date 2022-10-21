@@ -1,10 +1,12 @@
+import ctypes
+import logging
 from math import sin
+
 import sdl2
+from basic import BasicOpenGL
 from OpenGL.GL import *
 from OpenGL.GLU import *
-from basic import BasicOpenGL
-import logging
-import ctypes
+
 
 class Cubos(BasicOpenGL):
     def __init__(self,full_screen=False):
@@ -89,7 +91,7 @@ class Cubos(BasicOpenGL):
             i = 0
             for face in self.faces:
                 if singleColor:
-                    glColor3fv(cores[i])
+                    glColor3fv(self.cores[i])
                 for vertex in face:
                     if not singleColor:
                         glColor3fv(self.cores[vertex])

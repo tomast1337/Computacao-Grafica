@@ -1,10 +1,11 @@
+import ctypes
+import logging
+import sys
 from abc import ABC, abstractmethod
+
 import sdl2
 from OpenGL.GL import *
 from OpenGL.GLU import *
-import sys
-import logging
-import ctypes
 
 """
 Basic Runnable OpenGL class to be implemented in other classes
@@ -112,7 +113,6 @@ class BasicOpenGL(ABC):
             sdl2.SDL_GL_SwapWindow(self.window) # Swap the window buffers
         self.quit()
         
-
     def quit(self):
         sdl2.SDL_GL_DeleteContext(self.context)
         sdl2.SDL_DestroyWindow(self.window)
