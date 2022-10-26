@@ -20,12 +20,12 @@ class UVsphere(BasicOpenGL):
             height=600,
             title="Prisma test",
             full_screen=full_screen,
-            far=1000,
+            far=10000,
         )
         self.vertices = []
         self.faces = []
         self.uvs = []
-        self.step_angle = PI * 2 / 60
+        self.step_angle = PI * 2 / 32
         self.angle = [0, 0, 0]
         self.camera = [0, 0, 0]
         logging.info("Application started")
@@ -34,11 +34,12 @@ class UVsphere(BasicOpenGL):
             logging.info("Full screen mode")
 
     def update(self):
-        r = 1
+        r = 0.5
         self.vertices = []
         self.faces = []
         self.uvs = []
         latitude = 0
+
         while latitude < PI * 2:
             longitude = 0
             while longitude < PI * 2:
@@ -50,10 +51,25 @@ class UVsphere(BasicOpenGL):
                 longitude += self.step_angle
             latitude += self.step_angle
 
-        for i in range(len(self.vertices) - 1):
-            self.faces.append(
-                [i, i + 1, i + len(self.vertices) + 1, i + len(self.vertices)]
-            )
+        # create the faces
+        latitude = 0
+        while latitude < PI * 2 - self.step_angle:
+            longitude = 0
+            while longitude < PI * 2 - self.step_angle:
+                self.faces.append(
+                    [
+                        int(longitude / self.step_angle)
+                        + int(latitude / self.step_angle) * int(PI * 2 / self.step_angle),
+                        int(longitude / self.step_angle)
+                        + int(latitude / self.step_angle + 1) * int(PI * 2 / self.step_angle),
+                        int(longitude / self.step_angle + 1)
+                        + int(latitude / self.step_angle + 1) * int(PI * 2 / self.step_angle),
+                        int(longitude / self.step_angle + 1)
+                        + int(latitude / self.step_angle) * int(PI * 2 / self.step_angle),
+                    ]
+                )
+                longitude += self.step_angle
+            latitude += self.step_angle
 
         self.angle[0] += 1
         self.angle[1] += 1
@@ -63,22 +79,36 @@ class UVsphere(BasicOpenGL):
         # draw the uv sphere
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glLoadIdentity()
-        
+
         glPushMatrix()
-        glTranslatef(0.0, 0.0, -6)
-        
+
+        """
+        glTranslatef(0, 0, -.5)
         glRotatef(self.angle[0], 1, 0, 0)
         glRotatef(self.angle[1], 0, 1, 0)
         glRotatef(self.angle[2], 0, 0, 1)
-        
         glBegin(GL_POINTS)
+        glColor3f(1, 1, 1)
         for vertex in self.vertices:
-            glColor3f(1, 1, 1)
-            glVertex3f(vertex[0], vertex[1], vertex[2])
+            glVertex3fv(vertex)
         glEnd()
-        
+        """
+
+        glTranslatef(0, 0, -.5)
+        glRotatef(self.angle[0], 1, 0, 0)
+        glRotatef(self.angle[1], 0, 1, 0)
+        glRotatef(self.angle[2], 0, 0, 1)
+        glBegin(GL_QUADS)
+        for face in self.faces:
+            # color based on the face vertcies
+            for vertex in face:
+                glColor3fv(self.vertices[vertex])
+            for i in range(4):
+                glVertex3fv(self.vertices[face[i]])
+        glEnd()
+
+
         glPopMatrix()
-        
 
 
 if __name__ == "__main__":
