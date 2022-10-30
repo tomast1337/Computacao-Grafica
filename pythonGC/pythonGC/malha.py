@@ -5,7 +5,7 @@ import math
 from random import random
 
 import sdl2
-from basic import BasicOpenGLApp
+from pythonGC.basicGL2 import BasicOpenGLApp
 from OpenGL.GL import *
 from OpenGL.GLU import *
 

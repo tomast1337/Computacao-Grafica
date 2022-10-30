@@ -3,7 +3,7 @@ import logging
 from math import cos, sin
 
 import sdl2
-from basic import BasicOpenGLApp
+from pythonGC.basicGL2 import BasicOpenGLApp
 from OpenGL.GL import *
 from OpenGL.GLU import *
 

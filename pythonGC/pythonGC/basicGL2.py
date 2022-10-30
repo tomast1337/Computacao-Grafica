@@ -11,6 +11,8 @@ from OpenGL.GLU import *
 Basic Runnable OpenGL class to be implemented in other classes,
 and should be use using openGL 2.1 calls. 
 """
+
+
 class BasicOpenGLApp(ABC):
     def __init__(
         self,
