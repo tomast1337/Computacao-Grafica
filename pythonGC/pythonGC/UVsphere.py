@@ -3,14 +3,14 @@ import logging
 from math import cos, sin
 
 import sdl2
-from basic import BasicOpenGL
+from basic import BasicOpenGLApp
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
 PI = 3.1415926535897932384626433832795
 
 
-class UVsphere(BasicOpenGL):
+class UVsphere(BasicOpenGLApp):
     def __init__(self, full_screen=False):
         """
         Esse exemplo desenha um prisma.
@@ -59,13 +59,17 @@ class UVsphere(BasicOpenGL):
                 self.faces.append(
                     [
                         int(longitude / self.step_angle)
-                        + int(latitude / self.step_angle) * int(PI * 2 / self.step_angle),
+                        + int(latitude / self.step_angle)
+                        * int(PI * 2 / self.step_angle),
                         int(longitude / self.step_angle)
-                        + int(latitude / self.step_angle + 1) * int(PI * 2 / self.step_angle),
+                        + int(latitude / self.step_angle + 1)
+                        * int(PI * 2 / self.step_angle),
                         int(longitude / self.step_angle + 1)
-                        + int(latitude / self.step_angle + 1) * int(PI * 2 / self.step_angle),
+                        + int(latitude / self.step_angle + 1)
+                        * int(PI * 2 / self.step_angle),
                         int(longitude / self.step_angle + 1)
-                        + int(latitude / self.step_angle) * int(PI * 2 / self.step_angle),
+                        + int(latitude / self.step_angle)
+                        * int(PI * 2 / self.step_angle),
                     ]
                 )
                 longitude += self.step_angle
@@ -94,7 +98,7 @@ class UVsphere(BasicOpenGL):
         glEnd()
         """
 
-        glTranslatef(0, 0, -.5)
+        glTranslatef(0, 0, -0.5)
         glRotatef(self.angle[0], 1, 0, 0)
         glRotatef(self.angle[1], 0, 1, 0)
         glRotatef(self.angle[2], 0, 0, 1)
@@ -106,7 +110,6 @@ class UVsphere(BasicOpenGL):
             for i in range(4):
                 glVertex3fv(self.vertices[face[i]])
         glEnd()
-
 
         glPopMatrix()
 

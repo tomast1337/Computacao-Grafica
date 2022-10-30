@@ -5,16 +5,18 @@ import math
 from random import random
 
 import sdl2
-from basic import BasicOpenGL
+from basic import BasicOpenGLApp
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
 PI = 3.1415926535897932384626433832795
 
-def funcOFxy(x,y):
+
+def funcOFxy(x, y):
     return random() / 50
 
-class UVsphere(BasicOpenGL):
+
+class UVsphere(BasicOpenGLApp):
     def __init__(self, full_screen=False):
         """
         Esse exemplo desenha um prisma.
@@ -33,31 +35,25 @@ class UVsphere(BasicOpenGL):
         for i in range(r):
             for j in range(r):
                 self.vertices.append(
-                    [i / r - 0.5, j / r - 0.5, funcOFxy(j+r/2,i+r)])
+                    [i / r - 0.5, j / r - 0.5, funcOFxy(j + r / 2, i + r)]
+                )
 
         for vertexIndex in range(len(self.vertices)):
             if vertexIndex % r == 0:
-                continue # exclui ultima linha 
-            
-            if vertexIndex / r > r -1:
-                continue # exclui ultima coluna
+                continue  # exclui ultima linha
 
-            vertexIndex = vertexIndex -1
-            #print(vertexIndex / r)
-            bottom_face = [
-            vertexIndex,
-            vertexIndex + r,
-            vertexIndex + 1]
+            if vertexIndex / r > r - 1:
+                continue  # exclui ultima coluna
 
-            top_face = [
-                vertexIndex + 1,
-                vertexIndex + r + 1,
-                vertexIndex + r
-            ]
+            vertexIndex = vertexIndex - 1
+            # print(vertexIndex / r)
+            bottom_face = [vertexIndex, vertexIndex + r, vertexIndex + 1]
+
+            top_face = [vertexIndex + 1, vertexIndex + r + 1, vertexIndex + r]
             self.faces.append(bottom_face)
             self.faces.append(top_face)
 
-        #print(self.faces)
+        # print(self.faces)
 
         self.angle = [0, 0, 0]
         self.camera = [0, 0, 0]
@@ -67,7 +63,7 @@ class UVsphere(BasicOpenGL):
 
     def update(self):
         self.angle[0] += 1
-        self.angle[1] += .01
+        self.angle[1] += 0.01
         self.angle[2] += 1
 
     def render(self):
@@ -88,7 +84,7 @@ class UVsphere(BasicOpenGL):
             glColor(
                 self.vertices[face[0]][0] * 2,
                 self.vertices[face[1]][2] * 2,
-                self.vertices[face[2]][1] * 2
+                self.vertices[face[2]][1] * 2,
             )
             glVertex(self.vertices[face[0]])
             glVertex(self.vertices[face[1]])
