@@ -1,36 +1,31 @@
-def RGB2HSL(rgb):
-    r, g, b = rgb
-    r, g, b = r , g , b
-    mx = max(r, g, b)
-    mn = min(r, g, b)
-    df = mx - mn
-    if mx == mn:
-        h = 0
-    elif mx == r:
-        h = (60 * ((g - b) / df) + 360) % 360
-    elif mx == g:
-        h = (60 * ((b - r) / df) + 120) % 360
-    elif mx == b:
-        h = (60 * ((r - g) / df) + 240) % 360
-    if mx == 0:
-        s = 0
-    else:
-        s = (df / mx) * 100
-    l = (mx + mn) / 2 * 100
-    return h, s, l
+import colorsys
 
-def HSL2RGB(hsl):
+"""
+Converts GL RGB 0-1 to HSL 360-100-100
+"""
+
+
+def RGB2HSL(rgb: tuple) -> tuple:
+    r, g, b = rgb
+    return colorsys.rgb_to_hls(r, g, b)
+
+
+"""
+Converts HSL 360-100-100 to GL RGB 0-255
+"""
+
+
+def HSL2RGB(hsl: tuple) -> tuple:
     h, s, l = hsl
-    h, s, l = h / 360, s / 100, l / 100
-    if s == 0.0:
-        v = l
-        return v, v, v
-    if l < 0.5:
-        var_2 = l * (1 + s)
-    else:
-        var_2 = (l + s) - (s * l)
-    var_1 = 2 * l - var_2
-    r = 255 * hue2rgb(var_1, var_2, h + (1 / 3))
-    g = 255 * hue2rgb(var_1, var_2, h)
-    b = 255 * hue2rgb(var_1, var_2, h - (1 / 3))
-    return r, g, b
+    h /= 360
+    s /= 100
+    l /= 100
+    return colorsys.hls_to_rgb(h, s, l)
+
+if __name__ == "__main__":
+    rgb = (0.54789, 0.4657, 0.9654)
+    result = RGB2HSL(rgb)
+    print(f"RGB: {rgb} -> HSL: {result}")
+    hsl = (183, 50, 50)
+    result = HSL2RGB(hsl)
+    print(f"HSL: {hsl} -> RGB: {result}")
