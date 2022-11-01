@@ -5,15 +5,17 @@ import math
 from random import random
 
 import sdl2
-from pythonGC.basicGL2 import BasicOpenGLApp
+from basicGL2 import BasicOpenGLApp
 from OpenGL.GL import *
 from OpenGL.GLU import *
+
+from colorstuff import HSL2RGB
 
 PI = 3.1415926535897932384626433832795
 
 
 def funcOFxy(x, y):
-    return random() / 50
+    return random() / 5
 
 
 class UVsphere(BasicOpenGLApp):
@@ -30,8 +32,9 @@ class UVsphere(BasicOpenGLApp):
         )
         self.vertices = []
         self.faces = []
+        self.cores = []
 
-        r = 50
+        r = 10
         for i in range(r):
             for j in range(r):
                 self.vertices.append(
@@ -52,6 +55,17 @@ class UVsphere(BasicOpenGLApp):
             top_face = [vertexIndex + 1, vertexIndex + r + 1, vertexIndex + r]
             self.faces.append(bottom_face)
             self.faces.append(top_face)
+
+        # color the faces, rainbow style
+        hue_step = 360 / len(self.faces)
+        current_hue = 0
+        for face in self.faces:
+            color = HSL2RGB((current_hue, random() * 50 + 25, random() * 50 + 10))
+            # convert trupe to list
+            color = list(color)
+            print(color)
+            self.cores.append(color)
+            current_hue += hue_step
 
         # print(self.faces)
 
@@ -82,9 +96,9 @@ class UVsphere(BasicOpenGLApp):
         glBegin(GL_TRIANGLES)
         for face in self.faces:
             glColor(
-                self.vertices[face[0]][0] * 2,
-                self.vertices[face[1]][2] * 2,
-                self.vertices[face[2]][1] * 2,
+                self.cores[self.faces.index(face)][0],
+                self.cores[self.faces.index(face)][1],
+                self.cores[self.faces.index(face)][2],
             )
             glVertex(self.vertices[face[0]])
             glVertex(self.vertices[face[1]])

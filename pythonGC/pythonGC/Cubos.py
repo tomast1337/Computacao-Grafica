@@ -3,7 +3,7 @@ import logging
 from math import sin
 
 import sdl2
-from pythonGC.basicGL2 import BasicOpenGLApp
+from basicGL2 import BasicOpenGLApp
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
@@ -60,7 +60,7 @@ class Cubos(BasicOpenGLApp):
         )
 
         self.angle = [0, 0, 0]
-        self.camera = [0, 0, 0]
+        self.camera = [0, 0, -20]
         logging.info("Application started")
         if full_screen:
             logging.info("Full screen mode")

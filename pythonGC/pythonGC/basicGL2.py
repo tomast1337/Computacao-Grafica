@@ -83,8 +83,6 @@ class BasicOpenGLApp(ABC):
             self.far,
         )  # Far clipping plane
 
-        glTranslatef(0.0, 0.0, -20)  # Translate the scene
-
         # Show the window
         sdl2.SDL_ShowWindow(self.window)
 

@@ -4,9 +4,11 @@ from math import cos, sin
 
 import numpy as np
 import sdl2
-from pythonGC.basicGL2 import BasicOpenGLApp
+from basicGL2 import BasicOpenGLApp
 from OpenGL.GL import *
 from OpenGL.GLU import *
+
+from colorstuff import HSL2RGB
 
 PI = 3.1415926535897932384626433832795
 
@@ -21,7 +23,7 @@ class Piramide(BasicOpenGLApp):
             height=600,
             title="Piramide test",
             full_screen=full_screen,
-            far=1000,
+            far=10000000,
         )
         self.numero_de_lados = 3
 
@@ -29,11 +31,17 @@ class Piramide(BasicOpenGLApp):
         self.faces = []  # faces da piramide
         self.cores = []  # cores da piramide
 
-        self.angle = [0, 0, 0]
+        self.angle = [0, 0, -PI / 4]
         self.camera = [0, 0, 0]
+        self.rebuild = True
         logging.info("Application started")
         if full_screen:
             logging.info("Full screen mode")
+
+        # set projection matrix
+        glMatrixMode(GL_PROJECTION)
+        glLoadIdentity()
+        gluPerspective(45, 800 / 600, 0.1, 1000)
 
     def update(self):
         x, y = ctypes.c_int(0), ctypes.c_int(0)
@@ -44,19 +52,28 @@ class Piramide(BasicOpenGLApp):
             if self.numero_de_lados <= 3:
                 self.numero_de_lados = 3
             else:
-                self.numero_de_lados -= 0.1
+                self.numero_de_lados -= 1
+                self.rebuild = True
 
         if mouseClick & 4:
-            if self.numero_de_lados >= 8:
-                self.numero_de_lados = 8
+            if self.numero_de_lados >= 64:
+                self.numero_de_lados = 64
             else:
-                self.numero_de_lados += 0.1
+                self.numero_de_lados += 1
+                self.rebuild = True
+
+        # get w and s keys
+        keys = sdl2.keyboard.SDL_GetKeyboardState(None)
+        if keys[sdl2.SDL_SCANCODE_W]:
+            self.camera[2] += 0.001
+        if keys[sdl2.SDL_SCANCODE_S]:
+            self.camera[2] -= 0.001
 
         # rotate based on mouse position
 
         self.angle[0] = y.value
         self.angle[1] = x.value
-        self.angle[2] = 0
+        self.angle[2] = -PI / 4
 
         # get if w or s is pressed
         keys = sdl2.keyboard.SDL_GetKeyboardState(None)
@@ -68,6 +85,12 @@ class Piramide(BasicOpenGLApp):
 
         self.camera[0] = 0
         self.camera[1] = 0
+
+        if self.rebuild:
+            self.rebuild = False
+        else:
+            return
+
         self.vertices = []  # vetrices da piramide
         self.faces = []  # faces da piramide
         self.faces_normals = []  # normais das faces da piramide
@@ -114,11 +137,11 @@ class Piramide(BasicOpenGLApp):
         self.cores = []
         for _ in self.faces:
             self.cores.append((1, 0, 0))
+            self.cores.append((1, 0, 0))
+            self.cores.append((0, 1, 0))
             self.cores.append((0, 1, 0))
             self.cores.append((0, 0, 1))
-            self.cores.append((1, 1, 0))
-            self.cores.append((1, 0, 1))
-            self.cores.append((0, 1, 1))
+            self.cores.append((0, 0, 1))
 
     def render(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)

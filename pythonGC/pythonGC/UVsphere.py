@@ -3,7 +3,7 @@ import logging
 from math import cos, sin
 
 import sdl2
-from pythonGC.basicGL2 import BasicOpenGLApp
+from basicGL2 import BasicOpenGLApp
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
@@ -29,11 +29,12 @@ class UVsphere(BasicOpenGLApp):
         self.angle = [0, 0, 0]
         self.camera = [0, 0, 0]
         logging.info("Application started")
-
+        self.build()
         if full_screen:
             logging.info("Full screen mode")
 
-    def update(self):
+
+    def build(self):
         r = 0.5
         self.vertices = []
         self.faces = []
@@ -74,6 +75,9 @@ class UVsphere(BasicOpenGLApp):
                 )
                 longitude += self.step_angle
             latitude += self.step_angle
+
+    def update(self):
+        
 
         self.angle[0] += 1
         self.angle[1] += 1
