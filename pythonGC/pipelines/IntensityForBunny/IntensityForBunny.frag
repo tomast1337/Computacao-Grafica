@@ -5,5 +5,8 @@ out vec4 color;
 
 void main(void) 
 {
-    color = vec4(vec3(intensity), 0.05f);
+    // Global ambient light
+    vec3 ambient = vec3(0.1, 0.1, 0.1);
+
+    color = vec4(ambient, .5);
 }

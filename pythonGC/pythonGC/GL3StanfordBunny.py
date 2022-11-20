@@ -91,20 +91,20 @@ class StanfordBunnyModel(Model):
 
 class StanfordBunnyApp(OpenGLApp):
     def __init__(self):
-        super().__init__(800, 600, "My Application")
+        super().__init__(title="My Application", full_screen=True)
         self.camera = Camera()
         self.camera.position = glm.vec3(0, 0, 10)
 
     def setup(self):
         # OpenGL Initialization
-        GL.glClearColor(0.2, 0.2, 0.2, 0.0)
+        GL.glClearColor(0.2, 0.5, 0.2, 1.0)
         GL.glEnable(GL.GL_DEPTH_TEST)
         GL.glEnable(GL.GL_MULTISAMPLE)
 
         self.shader = ShaderProgram("IntensityForBunny")
         self.shader.compile_shader()
         self.shader.link()
-        
+
         # list uniforms
         rich.print(f"Available Uniforms: {self.shader.uniforms}")
 
@@ -115,7 +115,15 @@ class StanfordBunnyApp(OpenGLApp):
 
         # Lock the mouse
         sdl2.SDL_SetRelativeMouseMode(sdl2.SDL_TRUE)
-        
+
+        # set camera projection to the screen size specs
+        self.camera.update_projection_matrix(
+            self.window_width,
+            self.window_height,
+            near=0.1,
+            far=1000.0,
+            fov=45.0,
+        )
 
     def update(self):
         cameraSpeed = 0.1
@@ -138,7 +146,7 @@ class StanfordBunnyApp(OpenGLApp):
         with self.shader as shader:
             shader.set_uniform(b"view_matrix", self.camera.get_view_matrix())
             shader.set_uniform(b"proj_matrix", self.camera.projection)
-            
+
             shader.set_uniform(b"model_matrix", self.model.get_model_matrix())
             self.model.draw(shader)
 
