@@ -12,6 +12,7 @@ from array import array
 
 from shader import ShaderProgram
 
+
 class OpenGLApp(ABC):
     """
     Basic Runnable OpenGL class to be implemented in other classes,
@@ -124,11 +125,6 @@ class OpenGLApp(ABC):
                 elif self.event.type == sdl2.SDL_KEYDOWN:
                     if self.event.key.keysym.sym == sdl2.SDLK_ESCAPE:
                         self.running = False
-            # print frame rate and frame time overriding the last console line
-            rich.print(
-                f"Frame rate: {self.frameCount/self.frameTime:.2f} FPS \t Frame time: {self.frameTime/self.frameCount:.2f} ms",
-                end="\r",
-            )
             # update frame time
             self.frameTime = sdl2.SDL_GetTicks()
             self.update()  # Update the application state
@@ -143,6 +139,7 @@ class OpenGLApp(ABC):
         sdl2.SDL_Quit()
         logging.info("Application closed")
 
+
 if __name__ == "__main__":
 
     class MyApplication(OpenGLApp):
@@ -150,7 +147,7 @@ if __name__ == "__main__":
             super().__init__(800, 600, "My Application")
 
         def setup(self):
-             # OpenGL Initialization
+            # OpenGL Initialization
             GL.glClearColor(0.2, 0.2, 0.2, 0.0)
             GL.glEnable(GL.GL_DEPTH_TEST)
             GL.glEnable(GL.GL_MULTISAMPLE)
@@ -161,19 +158,11 @@ if __name__ == "__main__":
             self.shader.link()
 
             # list uniforms
-            rich.print(f"Uniforms: {self.shader.uniforms}")
+            rich.print(f"Available Uniforms: {self.shader.uniforms}")
 
-            position = array('f',[
-                -0.5, -0.5, 0.0,
-                0.5, -0.5, 0.0,
-                0.0,  0.5, 0.0
-            ])
+            position = array("f", [-0.5, -0.5, 0.0, 0.5, -0.5, 0.0, 0.0, 0.5, 0.0])
 
-            color = array('f',[
-                1.0, 0.0, 0.0,
-                0.0, 1.0, 0.0,
-                0.0, 0.0, 1.0
-            ])
+            color = array("f", [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0])
 
             self.triangleArrayBufferId = GL.glGenVertexArrays(1)
             GL.glBindVertexArray(self.triangleArrayBufferId)
@@ -182,37 +171,55 @@ if __name__ == "__main__":
 
             idVertexBuff = GL.glGenBuffers(1)
             GL.glBindBuffer(GL.GL_ARRAY_BUFFER, idVertexBuff)
-            GL.glBufferData(GL.GL_ARRAY_BUFFER
-            ,len(position)*position.itemsize,
-            ctypes.c_void_p(position.buffer_info()[0])
-            ,GL.GL_STATIC_DRAW)
+            GL.glBufferData(
+                GL.GL_ARRAY_BUFFER,
+                len(position) * position.itemsize,
+                ctypes.c_void_p(position.buffer_info()[0]),
+                GL.GL_STATIC_DRAW,
+            )
             GL.glVertexAttribPointer(0, 3, GL.GL_FLOAT, GL.GL_FALSE, 0, None)
 
             idColorBuff = GL.glGenBuffers(1)
             GL.glBindBuffer(GL.GL_ARRAY_BUFFER, idColorBuff)
-            GL.glBufferData(GL.GL_ARRAY_BUFFER,
-            len(color)*color.itemsize,
-            ctypes.c_void_p(color.buffer_info()[0]),
-            GL.GL_STATIC_DRAW)
+            GL.glBufferData(
+                GL.GL_ARRAY_BUFFER,
+                len(color) * color.itemsize,
+                ctypes.c_void_p(color.buffer_info()[0]),
+                GL.GL_STATIC_DRAW,
+            )
             GL.glVertexAttribPointer(1, 3, GL.GL_FLOAT, GL.GL_FALSE, 0, None)
 
         def update(self):
-            pass
+            # print frame rate and frame time overriding the last console line
+            rich.print(
+                f"Frame rate: {self.frameCount/self.frameTime:.2f} FPS \t Frame time: {self.frameTime/self.frameCount:.2f} ms",
+                end="\r",
+            )
 
         def render(self):
             GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
             with self.shader as shader:
                 mat = glm.mat4()
                 shader.set_uniform(b"MVP", mat)
-                GL.glDrawArrays(GL.GL_TRIANGLES,0,3)
-                
-                mat = glm.mat4() * glm.translate(glm.vec3(0.5,0.5,0.0)) * glm.scale(glm.vec3(0.5)) * glm.rotate(glm.pi(),glm.vec3(0.0,0.0,1.0))
+                GL.glDrawArrays(GL.GL_TRIANGLES, 0, 3)
+
+                mat = (
+                    glm.mat4()
+                    * glm.translate(glm.vec3(0.5, 0.5, 0.0))
+                    * glm.scale(glm.vec3(0.5))
+                    * glm.rotate(glm.pi(), glm.vec3(0.0, 0.0, 1.0))
+                )
                 shader.set_uniform(b"MVP", mat)
-                GL.glDrawArrays(GL.GL_TRIANGLES,0,3)
-        
-                mat = glm.mat4() * glm.translate(glm.vec3(-0.5,0.5,0.0)) * glm.scale(glm.vec3(0.3)) * glm.rotate(glm.pi(),glm.vec3(0.0,0.0,1.0))
+                GL.glDrawArrays(GL.GL_TRIANGLES, 0, 3)
+
+                mat = (
+                    glm.mat4()
+                    * glm.translate(glm.vec3(-0.5, 0.5, 0.0))
+                    * glm.scale(glm.vec3(0.3))
+                    * glm.rotate(glm.pi(), glm.vec3(0.0, 0.0, 1.0))
+                )
                 shader.set_uniform(b"MVP", mat)
-                GL.glDrawArrays(GL.GL_TRIANGLES,0,3)
+                GL.glDrawArrays(GL.GL_TRIANGLES, 0, 3)
 
     # Run the application
     app = MyApplication()
