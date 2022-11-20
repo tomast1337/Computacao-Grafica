@@ -8,11 +8,9 @@ from basicGL2 import BasicOpenGLApp
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
-from colorstuff import HSL2RGB
+from pythonGC.color_util import HSL2RGB
 
 PI = 3.1415926535897932384626433832795
-
-
 class Piramide(BasicOpenGLApp):
     def __init__(self, full_screen=True):
         """
