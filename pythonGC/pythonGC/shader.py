@@ -16,23 +16,30 @@ shaderExtensions = {
     "comp": GL.GL_COMPUTE_SHADER,
 }
 
+pipelines_folder_name = "pipelines"
 
 def list_pipeline_shaders():
     """
     List all available pipeline in the pipeline folder
     """
-    # get the path of the current file
-    path = os.path.dirname(os.path.realpath(__file__))
-    # get the path of the pipeline folder
-    pipelinePath = os.path.join(path, "pipelines")
-    # list subfolders in the pipeline folder
-    pipelineList = os.listdir(pipelinePath)
-    # Remove all non folder from the list
-    pipelineList = [
-        x for x in pipelineList if os.path.isdir(os.path.join(pipelinePath, x))
-    ]
-    return pipelineList
-
+    try:
+        # get root path
+        root_path = os.getcwd()
+        pipelinePath = os.path.join(root_path, pipelines_folder_name)
+        # list subfolders in the pipeline folder
+        pipelineList = os.listdir(pipelinePath)
+        # Remove all non folder from the list
+        pipelineList = [
+            x for x in pipelineList if os.path.isdir(os.path.join(pipelinePath, x))
+        ]
+        return pipelineList
+    except Exception as e:
+        logging.error(f"""
+        Error while listing pipeline shaders:
+        {e}
+        Make sure you have a {pipelines_folder_name} folder in the root path of the project
+        """)
+        sys.exit(1)
 
 class ShaderProgram:
     """
@@ -192,3 +199,5 @@ class ShaderProgram:
         """
         GL.glUseProgram(0)
 
+if __name__ == "__main__":
+    print("Available pipelines: ", list_pipeline_shaders())
