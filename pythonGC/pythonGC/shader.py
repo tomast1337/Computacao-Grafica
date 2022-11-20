@@ -41,6 +41,13 @@ def list_pipeline_shaders():
         """)
         sys.exit(1)
 
+def get_pipeline_path(pipeline_name:str)->str:
+    # get the path of the current file
+    root_path = os.getcwd()
+    # get the path of the pipeline folder
+    pipelinePath = os.path.join(root_path, "pipelines")
+    return pipelinePath
+
 class ShaderProgram:
     """
     Shader Program class:
@@ -68,12 +75,8 @@ class ShaderProgram:
         compile_shader()
         Compile the pipeline shader from the pipeline folder
         """
-        # get the path of the current file
-        path = os.path.dirname(os.path.realpath(__file__))
         # get the path of the pipeline folder
-        pipelinePath = os.path.join(path, "pipelines")
-        # get the path of the pipeline folder
-        pipelinePath = os.path.join(pipelinePath, self.pipeline_name)
+        pipelinePath = os.path.join(get_pipeline_path(self.pipeline_name), self.pipeline_name)
         # list all files in the pipeline folder
         pipelineFiles = os.listdir(pipelinePath)
         # Remove all non shader files from the list
@@ -201,3 +204,6 @@ class ShaderProgram:
 
 if __name__ == "__main__":
     print("Available pipelines: ", list_pipeline_shaders())
+    # print the absolute path of the pipeline folders
+    for pipeline in list_pipeline_shaders():
+        print(pipeline, ":", get_pipeline_path(pipeline))
