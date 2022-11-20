@@ -19,7 +19,7 @@ def funcOFxy(x, y):
 
 
 class UVsphere(BasicOpenGLApp):
-    def __init__(self, full_screen=False):
+    def __init__(self, full_screen=True):
         """
         Esse exemplo desenha um prisma.
         """
@@ -76,9 +76,9 @@ class UVsphere(BasicOpenGLApp):
             logging.info("Full screen mode")
 
     def update(self):
-        self.angle[0] += 1
+        self.angle[0] += .5
         self.angle[1] += 0.01
-        self.angle[2] += 1
+        self.angle[2] += .5
 
     def render(self):
         # draw the uv sphere

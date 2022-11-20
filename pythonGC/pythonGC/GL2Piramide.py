@@ -14,7 +14,7 @@ PI = 3.1415926535897932384626433832795
 
 
 class Piramide(BasicOpenGLApp):
-    def __init__(self, full_screen=False):
+    def __init__(self, full_screen=True):
         """
         Esse exemplo desenha quatro cubos, um em cada canto da tela rotacionando em torno de si mesmo.
         """
@@ -32,7 +32,7 @@ class Piramide(BasicOpenGLApp):
         self.cores = []  # cores da piramide
 
         self.angle = [0, 0, -PI / 4]
-        self.camera = [0, 0, 0]
+        self.camera = [0,0,-25]
         self.rebuild = True
         logging.info("Application started")
         if full_screen:
@@ -48,6 +48,8 @@ class Piramide(BasicOpenGLApp):
         mouseClick = sdl2.mouse.SDL_GetMouseState(None, None)
         sdl2.mouse.SDL_GetMouseState(x, y)
 
+        
+
         if mouseClick & 1:
             if self.numero_de_lados <= 3:
                 self.numero_de_lados = 3
@@ -62,12 +64,21 @@ class Piramide(BasicOpenGLApp):
                 self.numero_de_lados += 1
                 self.rebuild = True
 
-        # get w and s keys
+        camera_step = .5
+        # get w , a , s , d , q , e keys
         keys = sdl2.keyboard.SDL_GetKeyboardState(None)
         if keys[sdl2.SDL_SCANCODE_W]:
-            self.camera[2] += 0.001
+            self.camera[2] += camera_step
         if keys[sdl2.SDL_SCANCODE_S]:
-            self.camera[2] -= 0.001
+            self.camera[2] -= camera_step
+        if keys[sdl2.SDL_SCANCODE_A]:
+            self.camera[0] -= camera_step
+        if keys[sdl2.SDL_SCANCODE_D]:
+            self.camera[0] += camera_step
+        if keys[sdl2.SDL_SCANCODE_Q]:
+            self.camera[1] -= camera_step
+        if keys[sdl2.SDL_SCANCODE_E]:
+            self.camera[1] += camera_step
 
         # rotate based on mouse position
 
@@ -144,33 +155,26 @@ class Piramide(BasicOpenGLApp):
             self.cores.append((0, 0, 1))
 
     def render(self):
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        glLoadIdentity()
+        def draw_piramide():
+            glBegin(GL_TRIANGLES)
+            for face in self.faces:
+                for vértice_index in face:
+                    glColor3fv(self.cores[vértice_index])
+                    glVertex3fv(self.vertices[vértice_index])
 
+            glEnd()
+        
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        
         glPushMatrix()
-        glTranslatef(self.camera[0], self.camera[1], self.camera[2])
+        glTranslatef(*self.camera)
         glRotatef(self.angle[0], 1, 0, 0)
         glRotatef(self.angle[1], 0, 1, 0)
         glRotatef(self.angle[2], 0, 0, 1)
-        glBegin(GL_TRIANGLES)
-        for face in self.faces:
-            for vértice_index in face:
-                glColor3fv(self.cores[vértice_index])
-                glVertex3fv(self.vertices[vértice_index])
-        glEnd()
-
-        # draw face normals
-        # glBegin(GL_LINES)
-        # for face_index, face in enumerate(self.faces):
-        #    for vértice_index in face:
-        #        glColor3fv(self.cores[vértice_index])
-        #        glVertex3fv(self.vertices[vértice_index])
-        #        glVertex3fv(self.vertices[vértice_index] + self.faces_normals[face_index])
-        # glEnd()
-
+        draw_piramide()
         glPopMatrix()
 
 
 if __name__ == "__main__":
-    app = Piramide(full_screen=False)
+    app = Piramide()
     app.run()
