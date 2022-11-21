@@ -1,5 +1,6 @@
 import ctypes
 import logging
+import random
 import sys
 import rich
 import os
@@ -9,6 +10,7 @@ import sdl2
 from abc import ABC, abstractmethod
 from OpenGL import GL
 from array import array
+from camera import Camera
 
 from shader import ShaderProgram
 
@@ -21,8 +23,8 @@ class OpenGLApp(ABC):
 
     def __init__(
         self,
-        width=640,
-        height=480,
+        width=800,
+        height=600,
         title="OpenGL APP",
         full_screen=False,
     ):
@@ -144,11 +146,36 @@ if __name__ == "__main__":
 
     class MyApplication(OpenGLApp):
         def __init__(self):
-            super().__init__(800, 600, "My Application")
+            super().__init__(800, 600, "The Triangle Zone")
+            self.camera = Camera()
+            self.camera.position = glm.vec3(0.0, 0.0, 3.0)
+            self.piramide_data = []
+            PI = 3.1415
+            for i in range(0, 256):
+                self.piramide_data.append(
+                    {
+                        "position": glm.vec3(
+                            random.uniform(-1.0, 1.0) * 100, # x
+                            random.uniform(-1.0, 1.0) * 10, # y
+                            random.uniform(-1.0, 1.0) * 100, # z
+                        ),
+                        "size": int(random.uniform(0, 2.0) * 5 + 3),
+                        "iterations": int(random.uniform(0.0, 1.0) * 5),
+                        "rotation": glm.vec3(
+                            random.uniform(-1.0, 1.0) * PI * 10,
+                            random.uniform(-1.0, 1.0) * PI * 10,
+                            random.uniform(-1.0, 1.0) * PI * 10,
+                        ),
+                    }
+                )
 
         def setup(self):
+
+            # Lock the mouse
+            sdl2.SDL_SetRelativeMouseMode(sdl2.SDL_TRUE)
+
             # OpenGL Initialization
-            GL.glClearColor(0.2, 0.2, 0.2, 0.0)
+            GL.glClearColor(0.2, 0.2, 0.2, 1)
             GL.glEnable(GL.GL_DEPTH_TEST)
             GL.glEnable(GL.GL_MULTISAMPLE)
 
@@ -160,7 +187,7 @@ if __name__ == "__main__":
             # list uniforms
             rich.print(f"Available Uniforms: {self.shader.uniforms}")
 
-            position = array("f", [-0.5, -0.5, 0.0, 0.5, -0.5, 0.0, 0.0, 0.5, 0.0])
+            position = array("f", [-0.1, -0.1, 0.0, 0.1, -0.1, 0.0, 0.0, 0.1, 0.0])
 
             color = array("f", [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0])
 
@@ -190,36 +217,55 @@ if __name__ == "__main__":
             GL.glVertexAttribPointer(1, 3, GL.GL_FLOAT, GL.GL_FALSE, 0, None)
 
         def update(self):
-            # print frame rate and frame time overriding the last console line
+            cameraSpeed = 1
+            # get w a s d keys
+            keys = sdl2.SDL_GetKeyboardState(None)
+            self.camera.process_keyboard(keys, cameraSpeed)
+
+            # get mouse movement
+            x, y = ctypes.c_int(0), ctypes.c_int(0)
+            sdl2.SDL_GetRelativeMouseState(ctypes.byref(x), ctypes.byref(y))
+            self.camera.process_mouse_movement(x.value, y.value)
+
             rich.print(
-                f"Frame rate: {self.frameCount/self.frameTime:.2f} FPS \t Frame time: {self.frameTime/self.frameCount:.2f} ms",
+                f"Frame rate: {self.frameCount/self.frameTime:.2f} FPS \t Frame time: {self.frameTime/self.frameCount:.2f} ms \t Camera Position: {self.camera.position}",
                 end="\r",
             )
 
         def render(self):
             GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
             with self.shader as shader:
-                mat = glm.mat4()
-                shader.set_uniform(b"MVP", mat)
-                GL.glDrawArrays(GL.GL_TRIANGLES, 0, 3)
+                shader.set_uniform(b"view_matrix", self.camera.get_view_matrix())
+                shader.set_uniform(b"proj_matrix", self.camera.projection)
+                # draw a serpinski triangle
+                def draw_triangle(position, size, iterations, rotation):
+                    if iterations == 0:
+                        return
+                    mat = glm.mat4(1.0)
+                    mat = glm.translate(mat, position)
+                    mat = glm.scale(mat, glm.vec3(size))
+                    mat = glm.rotate(mat, glm.radians(rotation.x), glm.vec3(1, 0, 0)) # x
+                    mat = glm.rotate(mat, glm.radians(rotation.y), glm.vec3(0, 1, 0)) # y
+                    mat = glm.rotate(mat, glm.radians(rotation.z), glm.vec3(0, 0, 1)) # z
+                    shader.set_uniform(b"model_matrix", mat)
+                    GL.glDrawArrays(GL.GL_TRIANGLES, 0, 3)
+                    draw_triangle(
+                        position + glm.vec3(0, size, 0), size / 2, iterations - 1 , rotation
+                    )
+                    draw_triangle(
+                        position + glm.vec3(-size, -size, 0), size / 2, iterations - 1 , rotation
+                    )
+                    draw_triangle(
+                        position + glm.vec3(size, -size, 0), size / 2, iterations - 1 , rotation
+                    )
 
-                mat = (
-                    glm.mat4()
-                    * glm.translate(glm.vec3(0.5, 0.5, 0.0))
-                    * glm.scale(glm.vec3(0.5))
-                    * glm.rotate(glm.pi(), glm.vec3(0.0, 0.0, 1.0))
-                )
-                shader.set_uniform(b"MVP", mat)
-                GL.glDrawArrays(GL.GL_TRIANGLES, 0, 3)
-
-                mat = (
-                    glm.mat4()
-                    * glm.translate(glm.vec3(-0.5, 0.5, 0.0))
-                    * glm.scale(glm.vec3(0.3))
-                    * glm.rotate(glm.pi(), glm.vec3(0.0, 0.0, 1.0))
-                )
-                shader.set_uniform(b"MVP", mat)
-                GL.glDrawArrays(GL.GL_TRIANGLES, 0, 3)
+                for data in self.piramide_data:
+                    draw_triangle(
+                        data["position"],
+                        data["size"],
+                        data["iterations"],
+                        data["rotation"],
+                    )
 
     # Run the application
     app = MyApplication()
