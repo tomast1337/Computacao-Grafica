@@ -1,7 +1,7 @@
-#version 400
+#version 130
 
-layout (location=0) in vec3 attr_position;
-layout (location=1) in float attr_intensity;
+in vec3 attr_position;
+in float attr_intensity;
 uniform mat4 proj_matrix;
 uniform mat4 view_matrix;
 uniform mat4 model_matrix;

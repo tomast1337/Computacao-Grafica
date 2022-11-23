@@ -51,8 +51,8 @@ class StanfordBunnyModel(Model):
                     if faceCount == 0: 
                         break
 
-        self.N = len(indices) 
         self.arrayBufferId = GL.glGenVertexArrays(1)
+        self.N = len(indices) 
         GL.glBindVertexArray(self.arrayBufferId)
         GL.glEnableVertexAttribArray(0)  # POSITION
         GL.glEnableVertexAttribArray(1)  # INTENSITY
@@ -67,7 +67,7 @@ class StanfordBunnyModel(Model):
         )
         stride = 3 * ctypes.sizeof(ctypes.c_float) + ctypes.sizeof(ctypes.c_uint32)
         intensityPointer = ctypes.c_void_p(3 * ctypes.sizeof(ctypes.c_float))
-        GL.glVertexAttribPointer(0, 3, GL.GL_FLOAT, GL.GL_FALSE, stride, None)
+        GL.glVertexAttribPointer(0, 3, GL.GL_FLOAT, GL.GL_FALSE, stride, ctypes.c_void_p(0))
         GL.glVertexAttribPointer(
             1, 1, GL.GL_UNSIGNED_INT, GL.GL_FALSE, stride, intensityPointer
         )
@@ -81,7 +81,7 @@ class StanfordBunnyModel(Model):
             GL.GL_STATIC_DRAW,
         )
 
-    def draw(self, shader):
+    def draw(self):
         GL.glBindVertexArray(self.arrayBufferId)
         GL.glDrawElements(GL.GL_TRIANGLES, self.N, GL.GL_UNSIGNED_INT, None)
 
@@ -97,6 +97,12 @@ class StanfordBunnyApp(OpenGLApp):
         GL.glClearColor(0.2, 0.5, 0.2, 1.0)
         GL.glEnable(GL.GL_DEPTH_TEST)
         GL.glEnable(GL.GL_MULTISAMPLE)
+        # Enable transparency
+        GL.glEnable(GL.GL_BLEND)
+        GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
+
+        # Face culling
+        #GL.glEnable(GL.GL_CULL_FACE)
 
         self.shader = ShaderProgram("IntensityForBunny")
         self.shader.compile_shader()
@@ -134,7 +140,7 @@ class StanfordBunnyApp(OpenGLApp):
         self.camera.process_mouse_movement(x.value, y.value)
 
         rich.print(
-            f"Frame rate: {self.frameCount/self.frameTime:.2f} FPS \t Frame time: {self.frameTime/self.frameCount:.2f} ms \t Camera Position: {self.camera.position}",
+            f"Frame rate: {1/(self.frameTime/10000):.2f} FPS \t Frame time: {self.frameTime/self.frameCount:.2f} ms \t Camera Position: {self.camera.position}",
             end="\r",
         )
 
@@ -146,16 +152,7 @@ class StanfordBunnyApp(OpenGLApp):
 
             shader.set_uniform(b"model_matrix", self.model.get_model_matrix())
             quant = 2
-            for x in range(quant):
-                for y in range(quant):
-                    for z in range(quant):
-                        #scale = x / quant + 0.1
-                        scale = 10
-                        self.model.set_position(glm.vec3(x*quant, y*quant, z*quant))
-                        self.model.set_scale(glm.vec3(scale, scale, scale))
-                        shader.set_uniform(b"model_matrix", self.model.get_model_matrix())
-                        #rich.print(f"Model Matrix: {self.model.position}")
-                        self.model.draw(shader)
+            self.model.draw()
 
 if __name__ == "__main__":
     app = StanfordBunnyApp()
