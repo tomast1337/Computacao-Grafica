@@ -1,9 +1,6 @@
 import ctypes
-import logging
-import sys
 import rich
 import os
-import sys
 import glm
 import sdl2
 from OpenGL import GL
@@ -27,7 +24,7 @@ class StanfordBunnyModel(Model):
         with open(model_path, "r") as f:
             for line in f:
                 parts = line.split()
-                if state == 0:
+                if state == 0: # HEADER
                     if len(parts) > 0 and parts[0] == "end_header":
                         state = 1
                     else:
@@ -36,7 +33,7 @@ class StanfordBunnyModel(Model):
                                 vertexCount = int(parts[2])
                             elif parts[1] == "face":
                                 faceCount = int(parts[2])
-                elif state == 1:
+                elif state == 1: # VERTEX
                     vertices.append(float(parts[0]) * scale)
                     vertices.append(float(parts[1]) * scale)
                     vertices.append(float(parts[2]) * scale)
@@ -44,17 +41,17 @@ class StanfordBunnyModel(Model):
                     vertexCount -= 1
                     if vertexCount == 0:
                         state = 2
-                else:
+                else: # STATE == 2 -> FACES
                     faceVertexCount = int(parts[0])
                     for i in range(2, faceVertexCount):
                         indices.append(int(parts[1]))
                         indices.append(int(parts[i]))
                         indices.append(int(parts[i + 1]))
-                    faceCount -= 1
-                    if faceCount == 0:
+                    faceCount -= 1 
+                    if faceCount == 0: 
                         break
 
-        self.N = len(indices)
+        self.N = len(indices) 
         self.arrayBufferId = GL.glGenVertexArrays(1)
         GL.glBindVertexArray(self.arrayBufferId)
         GL.glEnableVertexAttribArray(0)  # POSITION
@@ -91,7 +88,7 @@ class StanfordBunnyModel(Model):
 
 class StanfordBunnyApp(OpenGLApp):
     def __init__(self):
-        super().__init__(title="My Application", full_screen=True)
+        super().__init__(title="My Application", full_screen=False)
         self.camera = Camera()
         self.camera.position = glm.vec3(0, 0, 10)
 
@@ -148,8 +145,17 @@ class StanfordBunnyApp(OpenGLApp):
             shader.set_uniform(b"proj_matrix", self.camera.projection)
 
             shader.set_uniform(b"model_matrix", self.model.get_model_matrix())
-            self.model.draw(shader)
-
+            quant = 2
+            for x in range(quant):
+                for y in range(quant):
+                    for z in range(quant):
+                        #scale = x / quant + 0.1
+                        scale = 10
+                        self.model.set_position(glm.vec3(x*quant, y*quant, z*quant))
+                        self.model.set_scale(glm.vec3(scale, scale, scale))
+                        shader.set_uniform(b"model_matrix", self.model.get_model_matrix())
+                        #rich.print(f"Model Matrix: {self.model.position}")
+                        self.model.draw(shader)
 
 if __name__ == "__main__":
     app = StanfordBunnyApp()
