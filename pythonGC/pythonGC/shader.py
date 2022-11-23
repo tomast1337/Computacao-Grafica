@@ -7,6 +7,8 @@ from abc import ABC, abstractmethod
 from OpenGL import GL
 import glm
 
+from texture import Texture
+
 shaderExtensions = {
     "vert": GL.GL_VERTEX_SHADER,
     "tesc": GL.GL_TESS_CONTROL_SHADER,
@@ -172,6 +174,8 @@ class ShaderProgram:
                 GL.glUniform4f(self.uniforms[name], *value)
         elif isinstance(value, glm.mat4):
             GL.glUniformMatrix4fv(self.uniforms[name], 1, GL.GL_FALSE, glm.value_ptr(value))
+        elif isinstance(value, Texture):
+            GL.glUniform1i(self.uniforms[name], value.get_unit())
         else:
             raise Exception(f"Uniform {name} type not supported")
 

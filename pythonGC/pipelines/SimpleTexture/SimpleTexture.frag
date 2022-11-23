@@ -7,5 +7,4 @@ uniform sampler2D textureSlot;
 void main(void) 
 {
     color = texture(textureSlot,textureCoord);
-    //color = vec4(1.0);
 }

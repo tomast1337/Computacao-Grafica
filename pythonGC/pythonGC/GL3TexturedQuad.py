@@ -40,6 +40,7 @@ class TexturedQuad(OpenGLApp):
         GL.glActiveTexture(GL.GL_TEXTURE0)
         self.texture = Texture("./textures/uv_grid_opengl.png")
         self.texture.load()
+        self.texture.bind(0)
 
         quad_vertices = array(
             "f",
@@ -123,7 +124,7 @@ class TexturedQuad(OpenGLApp):
             s.set_uniform(b"view_matrix", self.camera.get_view_matrix())
             s.set_uniform(b"proj_matrix", self.camera.projection)
             s.set_uniform(b"model_matrix", glm.mat4(1.0))
-            s.set_uniform(b"textureSlot", 0)
+            s.set_uniform(b"textureSlot", 1)
 
         GL.glBindVertexArray(self.quadArrayBufferId)
         GL.glDrawArrays(GL.GL_TRIANGLE_FAN, 0, 4)
