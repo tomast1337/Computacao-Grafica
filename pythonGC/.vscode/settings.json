@@ -14,11 +14,13 @@
         "MULTISAMPLE",
         "multisampling",
         "OPENGL",
+        "Parameteri",
         "SCANCODE",
         "SDL_KEYDOWN",
         "SDL_KEYUP",
         "SDL_QUIT",
         "SDLK_ESCAPE",
+        "tobytes",
         "Translatef",
         "vsync",
         "WINDOWPOS"
