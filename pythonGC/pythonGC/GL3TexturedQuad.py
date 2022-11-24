@@ -59,7 +59,7 @@ class TexturedQuad(OpenGLApp):
         )  # 4 vertices, 2 coordinates each
 
         self.squareArrayBufferId = GL.glGenVertexArrays(
-            1
+            1 # this number is the number of vertex arrays to generate, so we cloud generate multiple vertex arrays at once
         )  # create a vertex array object
         GL.glBindVertexArray(self.squareArrayBufferId)  # bind the vertex array object
         # Enable the attribute arrays, so this tells the shader where to get the data
@@ -106,6 +106,8 @@ class TexturedQuad(OpenGLApp):
             0,  # stride (0 = tightly packed)
             ctypes.c_void_p(0),  # array buffer offset
         )  # set the attribute pointer for the texture coordinates attribute
+
+        GL.glBindVertexArray(0)  # unbind the vertex array object from the current context
 
     def update(self):
         cameraSpeed = 0.5
@@ -166,6 +168,8 @@ class TexturedQuad(OpenGLApp):
                     s.set_uniform(b"model_matrix", mat4)
                     GL.glBindVertexArray(self.squareArrayBufferId)
                     GL.glDrawArrays(GL.GL_TRIANGLE_STRIP, 0, 4)
+        GL.glBindVertexArray(0) 
+        # unbind the vertex array object from the current context, so if we want to draw something else we don't use the same vertex array object
 
 
 if __name__ == "__main__":
