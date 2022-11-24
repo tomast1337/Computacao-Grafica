@@ -35,7 +35,6 @@ class TexturedQuad(OpenGLApp):
         # Enable texture
         GL.glEnable(GL.GL_TEXTURE_2D)
 
-
         # Pipeline (shaders)
         self.shader = ShaderProgram("SimpleTexture")
         self.shader.compile_shader()
@@ -49,66 +48,41 @@ class TexturedQuad(OpenGLApp):
         self.texture = Texture("./textures/uv_grid_opengl.png")
         self.texture.load()
 
-        quad_vertices = array(
-            "f",
-            [
-                -0.5,
-                -0.5,
-                0.0,
-                0.5,
-                -0.5,
-                0.0,
-                0.5,
-                0.5,
-                0.0,
-                -0.5,
-                0.5,
-                0.0,
-            ],
+        quad_position = array(
+            "f", [0.8, -0.8, 0.0, -0.8, -0.8, 0.0, 0.8, 0.8, 0.0, -0.8, 0.8, 0.0]
         )
 
-        quad_indices = array("I", [0, 1, 2, 3])
-
-        quad_uvs = array("f", [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0])
-
-        self.quadArrayBufferId = GL.glGenVertexArrays(1)
-        GL.glBindVertexArray(self.quadArrayBufferId)
+        quad_textureCoord = array("f", [1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0])
         
-        # Vertex Buffer
-        self.quadVertexBufferId = GL.glGenBuffers(1)
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.quadVertexBufferId)
+        self.squareArrayBufferId = GL.glGenVertexArrays(1)
+        GL.glBindVertexArray(self.squareArrayBufferId)
+        GL.glEnableVertexAttribArray(0)
+        GL.glEnableVertexAttribArray(1)
+
+        self.quadArrayBufferId = GL.glGenBuffers(1)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.quadArrayBufferId)
         GL.glBufferData(
             GL.GL_ARRAY_BUFFER,
-            quad_vertices.itemsize * len(quad_vertices),
-            ctypes.c_void_p(quad_vertices.buffer_info()[0]),
+            quad_position.itemsize * len(quad_position),
+            ctypes.c_void_p(quad_position.buffer_info()[0]),
             GL.GL_STATIC_DRAW,
         )
+        GL.glVertexAttribPointer(0, 3, GL.GL_FLOAT, GL.GL_FALSE, 0, ctypes.c_void_p(0))
 
-        # UV Buffer
-        self.quadUVBufferId = GL.glGenBuffers(1)
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.quadUVBufferId)
+        self.quadTextureBufferId = GL.glGenBuffers(1)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.quadTextureBufferId)
         GL.glBufferData(
             GL.GL_ARRAY_BUFFER,
-            quad_uvs.itemsize * len(quad_uvs),
-            ctypes.c_void_p(quad_uvs.buffer_info()[0]),
+            quad_textureCoord.itemsize * len(quad_textureCoord),
+            ctypes.c_void_p(quad_textureCoord.buffer_info()[0]),
             GL.GL_STATIC_DRAW,
         )
+        GL.glVertexAttribPointer(1, 2, GL.GL_FLOAT, GL.GL_FALSE, 0, ctypes.c_void_p(0))
 
-        # Index Buffer
-        self.quadIndexBufferId = GL.glGenBuffers(1)
-        GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.quadIndexBufferId)
-        GL.glBufferData(
-            GL.GL_ELEMENT_ARRAY_BUFFER,
-            quad_indices.itemsize * len(quad_indices),
-            ctypes.c_void_p(quad_indices.buffer_info()[0]),
-            GL.GL_STATIC_DRAW,
-        )
 
-        # Unbind
-        GL.glBindVertexArray(0)
 
     def update(self):
-        cameraSpeed = .1
+        cameraSpeed = 0.1
         # get w a s d keys
         keys = sdl2.SDL_GetKeyboardState(None)
         self.camera.process_keyboard(keys, cameraSpeed)
@@ -130,17 +104,10 @@ class TexturedQuad(OpenGLApp):
             s.set_uniform(b"view_matrix", self.camera.get_view_matrix())
             s.set_uniform(b"proj_matrix", self.camera.projection)
             s.set_uniform(b"model_matrix", glm.mat4(1.0))
-            s.set_uniform(b"textureSlot", 1)
+            s.set_uniform(b"textureSlot", 0)
 
-            GL.glBindVertexArray(self.quadArrayBufferId)
-            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.quadVertexBufferId)
-            GL.glVertexAttribPointer(0, 3, GL.GL_FLOAT, GL.GL_FALSE, 0, None)
-            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.quadUVBufferId)
-            GL.glVertexAttribPointer(1, 2, GL.GL_FLOAT, GL.GL_FALSE, 0, None)
-            GL.glEnableVertexAttribArray(0)
-
-
-
+            GL.glBindVertexArray(self.squareArrayBufferId)
+            GL.glDrawArrays(GL.GL_TRIANGLE_STRIP, 0, 4)
 
 
 if __name__ == "__main__":
