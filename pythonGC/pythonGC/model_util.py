@@ -28,7 +28,7 @@ class Model:
         rotation: glm.vec3 = glm.vec3(0.0, 0.0, 0.0),
         scale: glm.vec3 = glm.vec3(1.0, 1.0, 1.0),
     ):
-        if faces in None or vertices in None:
+        if faces is None or vertices is None:
             raise Exception("Faces and vertices cannot be None")
         self.vertices = array("f", vertices)
         self.faces = array("I", faces) 
@@ -195,7 +195,9 @@ class Model:
         # translate the model
         glm.translate(model, self.position)
         # rotate the model
-        glm.rotate(model, glm.radians(self.rotation.x), glm.vec3(1.0, 0.0, 0.0))
+        glm.rotate(model, (self.rotation.x), glm.vec3(1.0, 0.0, 0.0))
+        glm.rotate(model, (self.rotation.y), glm.vec3(0.0, 1.0, 0.0))
+        glm.rotate(model, (self.rotation.z), glm.vec3(0.0, 0.0, 1.0))
         # scale the model
         glm.scale(model, self.scale)
         # return the model matrix

@@ -140,18 +140,20 @@ class StanfordBunnyApp(OpenGLApp):
         self.camera.process_mouse_movement(x.value, y.value)
 
         rich.print(
-            f"Frame rate: {1/(self.frameTime/10000):.2f} FPS \t Frame time: {self.frameTime/self.frameCount:.2f} ms \t Camera Position: {self.camera.position}",
+            f"Frame rate: {1/(self.frameTime/10000):.2f} FPS "+
+            f"\t Frame time: {self.frameTime/self.frameCount:.2f} ms "+
+            f"\t Camera Position: {self.camera.position}"+
+            f"\t Model rotation: {self.model.rotation}",
             end="\r",
         )
+        self.model.rotation += glm.vec3(0.0, 1, 0.0)
 
     def render(self):
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
         with self.shader as shader:
             shader.set_uniform(b"view_matrix", self.camera.get_view_matrix())
             shader.set_uniform(b"proj_matrix", self.camera.projection)
-
             shader.set_uniform(b"model_matrix", self.model.get_model_matrix())
-            quant = 2
             self.model.draw()
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
-#version 400
+#version 130
 
-layout (location=0) in vec3 attr_position;
-layout (location=1) in vec2 attr_textureCoord;
+in vec3 attr_position;
+in vec2 attr_textureCoord;
 
 out vec2 textureCoord;
 uniform mat4 model_matrix;
