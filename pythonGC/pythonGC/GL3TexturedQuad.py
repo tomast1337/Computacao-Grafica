@@ -44,43 +44,71 @@ class TexturedQuad(OpenGLApp):
         rich.print(f"Available Uniforms: {self.shader.uniforms}")
 
         # Texture
-        GL.glActiveTexture(GL.GL_TEXTURE0)
-        self.texture = Texture("./textures/uv_grid_opengl.png")
-        self.texture.load()
+        GL.glActiveTexture(GL.GL_TEXTURE0)  # set active texture
+        self.texture = Texture(
+            "./textures/uv_grid_opengl.png"
+        )  # load texture from file into active texture
+        self.texture.load()  # load texture into GPU
 
         quad_position = array(
             "f", [0.8, -0.8, 0.0, -0.8, -0.8, 0.0, 0.8, 0.8, 0.0, -0.8, 0.8, 0.0]
+        )  # 4 vertices, 3 coordinates each
+
+        quad_textureCoord = array(
+            "f", [1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0]
+        )  # 4 vertices, 2 coordinates each
+
+        self.squareArrayBufferId = GL.glGenVertexArrays(
+            1
+        )  # create a vertex array object
+        GL.glBindVertexArray(self.squareArrayBufferId)  # bind the vertex array object
+        # Enable the attribute arrays, so this tells the shader where to get the data
+        GL.glEnableVertexAttribArray(0)  # enable the first attribute (position
+        GL.glEnableVertexAttribArray(
+            1 # this number must match the layout in the shader
+        )  # enable the second attribute (texture coordinates),
+        """ // Example in shader
+        layout (location = 0) in vec3 position; // GL.glEnableVertexAttribArray(0)
+        """ 
+
+        self.quadArrayBufferId = GL.glGenBuffers(1)  # create a vertex buffer object
+        GL.glBindBuffer(
+            GL.GL_ARRAY_BUFFER, self.quadArrayBufferId
+        )  # bind the vertex buffer object
+        GL.glBufferData(  # copy the vertex data to the GPU
+            GL.GL_ARRAY_BUFFER,  # target
+            quad_position.itemsize * len(quad_position),  # size of the data
+            ctypes.c_void_p(quad_position.buffer_info()[0]),  # pointer to the data
+            GL.GL_STATIC_DRAW,  # usage
         )
-
-        quad_textureCoord = array("f", [1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0])
-
-        self.squareArrayBufferId = GL.glGenVertexArrays(1)
-        GL.glBindVertexArray(self.squareArrayBufferId)
-        GL.glEnableVertexAttribArray(0)
-        GL.glEnableVertexAttribArray(1)
-
-        self.quadArrayBufferId = GL.glGenBuffers(1)
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.quadArrayBufferId)
-        GL.glBufferData(
-            GL.GL_ARRAY_BUFFER,
-            quad_position.itemsize * len(quad_position),
-            ctypes.c_void_p(quad_position.buffer_info()[0]),
-            GL.GL_STATIC_DRAW,
-        )
-        GL.glVertexAttribPointer(0, 3, GL.GL_FLOAT, GL.GL_FALSE, 0, ctypes.c_void_p(0))
+        GL.glVertexAttribPointer(
+            0,  # attribute index (location in the shader)
+            3,  # number of coordinates, 3 describes a 3D vector
+            GL.GL_FLOAT,  # type
+            GL.GL_FALSE,  # normalized
+            0,  # stride (0 = tightly packed)
+            ctypes.c_void_p(0),  # array buffer offset
+        )  # set the attribute pointer for the position attribute
 
         self.quadTextureBufferId = GL.glGenBuffers(1)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.quadTextureBufferId)
         GL.glBufferData(
-            GL.GL_ARRAY_BUFFER,
-            quad_textureCoord.itemsize * len(quad_textureCoord),
-            ctypes.c_void_p(quad_textureCoord.buffer_info()[0]),
-            GL.GL_STATIC_DRAW,
+            GL.GL_ARRAY_BUFFER,  # target
+            quad_textureCoord.itemsize * len(quad_textureCoord),  # size of the data
+            ctypes.c_void_p(quad_textureCoord.buffer_info()[0]),  # pointer to the data
+            GL.GL_STATIC_DRAW,  # usage
         )
-        GL.glVertexAttribPointer(1, 2, GL.GL_FLOAT, GL.GL_FALSE, 0, ctypes.c_void_p(0))
+        GL.glVertexAttribPointer(
+            1,  # attribute index (location in the shader)
+            2,  # number of coordinates, in this case 2 (u,v)
+            GL.GL_FLOAT,  # type
+            GL.GL_FALSE,  # normalized
+            0,  # stride (0 = tightly packed)
+            ctypes.c_void_p(0),  # array buffer offset
+        )  # set the attribute pointer for the texture coordinates attribute
 
     def update(self):
-        cameraSpeed = .5
+        cameraSpeed = 0.5
         # get w a s d keys
         keys = sdl2.SDL_GetKeyboardState(None)
         self.camera.process_keyboard(keys, cameraSpeed)
@@ -126,7 +154,9 @@ class TexturedQuad(OpenGLApp):
                         0,
                     )
                     # the farther away bigger the quad
-                    scale = glm.vec3((1 / (1 + glm.distance(position, self.camera.position)) * 2))
+                    scale = glm.vec3(
+                        (1 / (1 + glm.distance(position, self.camera.position)) * 2)
+                    )
                     mat4 = glm.mat4(1.0)
                     mat4 = glm.translate(mat4, position)
                     mat4 = glm.rotate(mat4, rotation.x, glm.vec3(1, 0, 0))
