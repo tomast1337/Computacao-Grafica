@@ -16,7 +16,7 @@ class TexturedQuad(OpenGLApp):
     def __init__(self):
         super().__init__(800, 600, "The Triangle Zone")
         self.camera = Camera()
-        self.camera.position = glm.vec3(0.0, 0.0, 3.0)
+        self.camera.position = glm.vec3(0.0, 0.0, 0.0)
 
     def setup(self):
 
@@ -53,7 +53,7 @@ class TexturedQuad(OpenGLApp):
         )
 
         quad_textureCoord = array("f", [1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0])
-        
+
         self.squareArrayBufferId = GL.glGenVertexArrays(1)
         GL.glBindVertexArray(self.squareArrayBufferId)
         GL.glEnableVertexAttribArray(0)
@@ -79,10 +79,8 @@ class TexturedQuad(OpenGLApp):
         )
         GL.glVertexAttribPointer(1, 2, GL.GL_FLOAT, GL.GL_FALSE, 0, ctypes.c_void_p(0))
 
-
-
     def update(self):
-        cameraSpeed = 0.1
+        cameraSpeed = .5
         # get w a s d keys
         keys = sdl2.SDL_GetKeyboardState(None)
         self.camera.process_keyboard(keys, cameraSpeed)
@@ -103,11 +101,41 @@ class TexturedQuad(OpenGLApp):
         with self.shader as s:
             s.set_uniform(b"view_matrix", self.camera.get_view_matrix())
             s.set_uniform(b"proj_matrix", self.camera.projection)
-            s.set_uniform(b"model_matrix", glm.mat4(1.0))
+
             s.set_uniform(b"textureSlot", 0)
 
-            GL.glBindVertexArray(self.squareArrayBufferId)
-            GL.glDrawArrays(GL.GL_TRIANGLE_STRIP, 0, 4)
+            n = 25
+            for latitude in range(0, n):
+                for longitude in range(0, n):
+                    pi = 3.14159265359
+                    radius = n / 2
+                    angleX = (latitude / n) * 2 * pi
+                    angleY = (longitude / n) * 2 * pi
+                    y = radius * glm.sin(angleX) * glm.cos(angleY)
+                    z = radius * glm.sin(angleX) * glm.sin(angleY)
+                    x = radius * glm.cos(angleX)
+
+                    position = glm.vec3(x, y, z)
+                    # rotate face camera
+                    cameraX = self.camera.position.x
+                    cameraY = self.camera.position.y
+                    cameraZ = self.camera.position.z
+                    rotation = glm.vec3(
+                        0,
+                        glm.atan2(cameraX - x, cameraZ - z),
+                        0,
+                    )
+                    # the farther away bigger the quad
+                    scale = glm.vec3((1 / (1 + glm.distance(position, self.camera.position)) * 2))
+                    mat4 = glm.mat4(1.0)
+                    mat4 = glm.translate(mat4, position)
+                    mat4 = glm.rotate(mat4, rotation.x, glm.vec3(1, 0, 0))
+                    mat4 = glm.rotate(mat4, rotation.y, glm.vec3(0, 1, 0))
+                    mat4 = glm.rotate(mat4, rotation.z, glm.vec3(0, 0, 1))
+                    mat4 = glm.scale(mat4, scale)
+                    s.set_uniform(b"model_matrix", mat4)
+                    GL.glBindVertexArray(self.squareArrayBufferId)
+                    GL.glDrawArrays(GL.GL_TRIANGLE_STRIP, 0, 4)
 
 
 if __name__ == "__main__":
