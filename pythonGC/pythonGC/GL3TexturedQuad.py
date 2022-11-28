@@ -59,17 +59,17 @@ class TexturedQuad(OpenGLApp):
         )  # 4 vertices, 2 coordinates each
 
         self.squareArrayBufferId = GL.glGenVertexArrays(
-            1 # this number is the number of vertex arrays to generate, so we cloud generate multiple vertex arrays at once
+            1  # this number is the number of vertex arrays to generate, so we cloud generate multiple vertex arrays at once
         )  # create a vertex array object
         GL.glBindVertexArray(self.squareArrayBufferId)  # bind the vertex array object
         # Enable the attribute arrays, so this tells the shader where to get the data
         GL.glEnableVertexAttribArray(0)  # enable the first attribute (position
         GL.glEnableVertexAttribArray(
-            1 # this number must match the layout in the shader
+            1  # this number must match the layout in the shader
         )  # enable the second attribute (texture coordinates),
         """ // Example in shader
         layout (location = 0) in vec3 position; // GL.glEnableVertexAttribArray(0)
-        """ 
+        """
 
         self.quadArrayBufferId = GL.glGenBuffers(1)  # create a vertex buffer object
         GL.glBindBuffer(
@@ -107,7 +107,9 @@ class TexturedQuad(OpenGLApp):
             ctypes.c_void_p(0),  # array buffer offset
         )  # set the attribute pointer for the texture coordinates attribute
 
-        GL.glBindVertexArray(0)  # unbind the vertex array object from the current context
+        GL.glBindVertexArray(
+            0
+        )  # unbind the vertex array object from the current context
 
     def update(self):
         cameraSpeed = 0.5
@@ -167,8 +169,12 @@ class TexturedQuad(OpenGLApp):
                     mat4 = glm.scale(mat4, scale)
                     s.set_uniform(b"model_matrix", mat4)
                     GL.glBindVertexArray(self.squareArrayBufferId)
-                    GL.glDrawArrays(GL.GL_TRIANGLE_STRIP, 0, 4)
-        GL.glBindVertexArray(0) 
+                    GL.glDrawArrays(
+                        GL.GL_TRIANGLE_STRIP,  # mode
+                        0,  # starting index in the enabled arrays
+                        4,  # number of indices to be rendered
+                    )  # draw the square
+        GL.glBindVertexArray(0)
         # unbind the vertex array object from the current context, so if we want to draw something else we don't use the same vertex array object
 
 
