@@ -188,6 +188,7 @@ class ShaderProgram:
             GL.glDeleteProgram(self.program)
         for shader in self.shaders:
             GL.glDeleteShader(shader)
+            
 
     def __enter__(self):
         """

@@ -12,6 +12,7 @@ from basicGL3 import OpenGLApp
 from texture import Texture
 import math
 
+
 class sphereModel(Model):
     def __init__(self, radius, slices, stacks):
         self.radius = radius
@@ -25,40 +26,39 @@ class sphereModel(Model):
         super().__init__(self.vertices, self.indices, self.normals, self.texcoords)
 
     def generate(self):
+        latitude = 0
+        longitude = 0
+        vertices = []
         for i in range(self.stacks + 1):
-            V = i / self.stacks
-            phi = V * math.pi
+            latitude = i * math.pi / self.stacks
+            sinLat = math.sin(latitude)
+            cosLat = math.cos(latitude)
             for j in range(self.slices + 1):
-                U = j / self.slices
-                theta = U * (math.pi * 2)
-                x = math.cos(theta) * math.sin(phi)
-                y = math.cos(phi)
-                z = math.sin(theta) * math.sin(phi)
-                self.vertices.append(x * self.radius)
-                self.vertices.append(y * self.radius)
-                self.vertices.append(z * self.radius)
-                self.normals.append(x)
-                self.normals.append(y)
-                self.normals.append(z)
-                self.texcoords.append(U)
-                self.texcoords.append(V)
-        for i in range(self.stacks):
-            k1 = i * (self.slices + 1)
-            k2 = k1 + self.slices + 1
-            for j in range(self.slices):
-                if i != 0:
-                    self.indices.append(k1)
-                    self.indices.append(k2)
-                    self.indices.append(k1 + 1)
-                if i != (self.stacks - 1):
-                    self.indices.append(k1 + 1)
-                    self.indices.append(k2)
-                    self.indices.append(k2 + 1)
-                k1 += 1
-                k2 += 1
+                longitude = j * 2 * math.pi / self.slices
+                sinLong = math.sin(longitude)
+                cosLong = math.cos(longitude)
+                x = cosLong * sinLat
+                y = cosLat
+                z = sinLong * sinLat
+                self.vertices.append([x, y, z])
+
+        
+        self.vertices = array("f", [item for sublist in vertices for item in sublist])
+        self.vao = GL.glGenBuffers(1)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vao)
+        GL.glBufferData(
+            GL.GL_ARRAY_BUFFER,
+            self.vertices.itemsize * len(self.vertices),
+            ctypes.c_void_p(self.vertices.buffer_info()[0]),
+            GL.GL_STATIC_DRAW,
+        )
+        GL.glBindVertexArray(0)
 
     def render(self):
-        GL.glDrawElements(GL.GL_TRIANGLES, len(self.indices), GL.GL_UNSIGNED_INT, None)s
+        GL.glBindVertexArray(self.vao)
+        GL.glDrawArrays(GL.GL_POINTS, 0, len(self.vertices))
+
+
 class Earth(OpenGLApp):
     def __init__(self):
         super().__init__(800, 600, "Earth")
@@ -83,7 +83,7 @@ class Earth(OpenGLApp):
         GL.glEnable(GL.GL_TEXTURE_2D)
 
         # Pipeline (shaders)
-        self.shader = ShaderProgram("SimpleTexture")
+        self.shader = ShaderProgram("WhiteDotsPipeline")
         self.shader.compile_shader()
         self.shader.link()
 
@@ -104,12 +104,12 @@ class Earth(OpenGLApp):
         with self.shader as s:
             s.set_uniform(b"model_matrix", glm.mat4(1.0))
             s.set_uniform(b"view_matrix", self.camera.get_view_matrix())
-            s.set_uniform(b"proj_matrix", self.camera.projection)
-            s.set_uniform(b"textureSlot", 0)
+            s.set_uniform(b"proj_matrix", self.camera.projection) 
             self.model.render()
+        GL.glBindVertexArray(0)
 
     def update(self):
-        cameraSpeed = .1
+        cameraSpeed = 0.1
         # get w a s d keys
         keys = sdl2.SDL_GetKeyboardState(None)
         self.camera.process_keyboard(keys, cameraSpeed)
@@ -123,6 +123,7 @@ class Earth(OpenGLApp):
             f"Frame rate: {1/(self.frameTime/10000):.2f} FPS \t Frame time: {self.frameTime/self.frameCount:.2f} ms \t Camera Position: {self.camera.position}",
             end="\r",
         )
+
 
 if __name__ == "__main__":
     app = Earth()
