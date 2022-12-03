@@ -11,6 +11,8 @@ from shader import ShaderProgram
 from basicGL3 import OpenGLApp
 from texture import Texture
 
+def flatten(l):
+    return [item for sublist in l for item in sublist]
 
 class Dice(Model):
     def __init__(self):
@@ -24,181 +26,106 @@ class Dice(Model):
         self.generate()
 
     def generate(self):
-        # generate a cube
-        self.vertices = array(
+        self.attr_position = array(
             "f",
-            [
-                -0.5, -0.5,  -0.5, #F A
-                0.5, -0.5,   -0.5, #F B
-                0.5,  0.5,   -0.5, #F C
-                -0.5, 0.5,   -0.5, #F D
-                -0.5, -0.5,   0.5, #F E
-                0.5,  -0.5,   0.5, #F F
-                0.5,   0.5,   0.5, #F G
-                -0.5,  0.5,   0.5, #F H
-            ],
+            flatten([                      
+                 # Vertex positions
+                [ 1,  1,  1],[ 1,  1, -1],[  1, -1,  1], # F A
+                [ 1, -1,  1],[ 1,  1, -1],[  1, -1, -1], # F B
+                [ 1,  1,  1],[-1,  1,  1],[  1, -1,  1], # R A
+                [ 1, -1,  1],[-1,  1,  1],[ -1, -1,  1], # R B
+                [ 1,  1,  1],[ 1,  1, -1],[ -1,  1,  1], # U A
+                [-1,  1,  1],[ 1,  1, -1],[ -1,  1, -1], # U B
+                [-1,  1,  1],[-1,  1, -1],[ -1, -1,  1], # L A
+                [-1, -1,  1],[-1,  1, -1],[ -1, -1, -1], # L B
+                [-1, -1,  1],[-1, -1, -1],[  1, -1,  1], # D A
+                [ 1, -1,  1],[-1, -1, -1],[  1, -1, -1], # D B
+                [-1, -1, -1],[-1,  1, -1],[  1, -1, -1], # B A
+                [ 1, -1, -1],[-1,  1, -1],[  1,  1, -1], # B B
+            ]),
         )
+
         self.indices = array(
             "I",
             [
-                0,
-                1,
-                2,
-                0,
-                2,
-                3,
-                4,
-                6,
-                5,
-                4,
-                7,
-                6,
-                4,
-                5,
-                1,
-                4,
-                1,
-                0,
-                3,
-                2,
-                6,
-                3,
-                6,
-                7,
-                1,
-                5,
-                6,
-                1,
-                6,
-                2,
-                4,
-                0,
-                3,
-                4,
-                3,
-                7,
+                # Indices
+                # Front
+                2, 1, 0,
+                5, 4, 3,
+                # Right
+                6, 7, 8,
+                9, 10, 11,
+                # Up
+                12, 13, 14,
+                15, 16, 17,
+                # Left
+                18, 19, 20,
+                21, 22, 23,
+                # Down
+                24, 25, 26,
+                27, 28, 29,
+                # Back
+                30, 31, 32,
+                33, 34, 35,
             ],
         )
-        self.normals = array(
+
+        self.attr_textureCoord = array(
             "f",
-            [
-                0.0,
-                0.0,
-                -1.0,
-                0.0,
-                0.0,
-                1.0,
-                0.0,
-                1.0,
-                0.0,
-                0.0,
-                -1.0,
-                0.0,
-                -1.0,
-                0.0,
-                0.0,
-                1.0,
-                0.0,
-                0.0,
-            ],
+            flatten([     #Texture Coordinates
+                [  0, 1/2],[0,  1],[1/3, 1/2], # F A
+                [1/3, 1/2],[0,  1],[1/3,   1], # F B
+
+                [ 0,   0],[0, 1/2],[1/3,   0], # R A
+                [1/3,  0],[0, 1/2],[1/3, 1/2], # R B
+                
+                [1/3, 1/2],[1/3,  1],[2/3, 1/2], # U A
+                [2/3, 1/2],[1/3,  1],[2/3,   1], # U B
+                
+                [1/3,  0],[1/3, 1/2],[2/3,   0], # L A
+                [2/3,  0],[1/3, 1/2],[2/3, 1/2], # L B
+                
+                [2/3, 1/2],[2/3,  1],[1, 1/2], # D A
+                [  1, 1/2],[2/3,  1],[1,   1], # D B
+                
+                [2/3,  0],[2/3, 1/2],[1,   0], # B A
+                [  1,  0],[2/3, 1/2],[1, 1/2], # B B
+            ]),
         )
-        """
-        Dice texture is a 3 x 2 grid of 6 faces
-        1/2, 1/3
-        1/2, 2/3
-        1/2, 1/3
-        """
-        self.texcoords = array(
-            "f",
-            [
-                # 1
-                0.0 , 1.0,
-                0.0 , 1/2,
-                1/3, 1/2,
-                1/3, 1.0,
-                1/3, 1/2,
-                2/3, 1/2,
-                # 2
-                1/3, 1.0,
-                1/3, 1/2,
-                2/3, 1/2,
-                1/3, 1.0,
-                2/3, 1/2,
-                2/3, 1.0,
-                ## 3
-                #2/3, 1.0,
-                #2/3, 1/2,
-                #1.0 , 1/2,
-                #2/3, 1.0,
-                #1.0 , 1/2,
-                #1.0 , 1.0,
-                ## 4
-                #0.0 , 1/2,
-                #0.0 , 0.0,
-                #1/3, 0.0,
-                #0.0 , 1/2,
-                #1/3, 0.0,
-                #1/3, 1/2,
-                ## 5
-                #1/3, 1/2,
-                #1/3, 0.0,
-                #2/3, 0.0,
-                #1/3, 1/2,
-                #2/3, 0.0,
-                #2/3, 1/2,
-                ## 6
-                #2/3, 1/2,
-                #2/3, 0.0,
-                #1.0 , 0.0,
-                #2/3, 1/2,
-                #1.0 , 0.0,
-                #1.0 , 1/2,
-            ],
-        )
+
 
     def load(self):
         """
         in vec3 attr_position;
         in vec2 attr_textureCoord;
-
         """
         self.vao = GL.glGenVertexArrays(1)
+        self.vbo = GL.glGenBuffers(1)
+        self.ebo = GL.glGenBuffers(1)
+        self.tbo = GL.glGenBuffers(1)
+
         GL.glBindVertexArray(self.vao)
 
-        self.vbo = GL.glGenBuffers(1)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vbo)
         GL.glBufferData(
             GL.GL_ARRAY_BUFFER,
-            self.vertices.itemsize * len(self.vertices),
-            ctypes.c_void_p(self.vertices.buffer_info()[0]),
+            self.attr_position.itemsize * len(self.attr_position),
+            ctypes.c_void_p(self.attr_position.buffer_info()[0]),
             GL.GL_STATIC_DRAW,
         )
         GL.glVertexAttribPointer(0, 3, GL.GL_FLOAT, GL.GL_FALSE, 0, None)
         GL.glEnableVertexAttribArray(0)
 
-        self.tbo = GL.glGenBuffers(1)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.tbo)
         GL.glBufferData(
             GL.GL_ARRAY_BUFFER,
-            self.texcoords.itemsize * len(self.texcoords),
-            ctypes.c_void_p(self.texcoords.buffer_info()[0]),
+            self.attr_textureCoord.itemsize * len(self.attr_textureCoord),
+            ctypes.c_void_p(self.attr_textureCoord.buffer_info()[0]),
             GL.GL_STATIC_DRAW,
         )
         GL.glVertexAttribPointer(1, 2, GL.GL_FLOAT, GL.GL_FALSE, 0, None)
         GL.glEnableVertexAttribArray(1)
 
-        self.nbo = GL.glGenBuffers(1)
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.nbo)
-        GL.glBufferData(
-            GL.GL_ARRAY_BUFFER,
-            self.normals.itemsize * len(self.normals),
-            ctypes.c_void_p(self.normals.buffer_info()[0]),
-            GL.GL_STATIC_DRAW,
-        )
-        GL.glVertexAttribPointer(2, 3, GL.GL_FLOAT, GL.GL_FALSE, 0, None)
-        GL.glEnableVertexAttribArray(2)
-
-        self.ebo = GL.glGenBuffers(1)
         GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.ebo)
         GL.glBufferData(
             GL.GL_ELEMENT_ARRAY_BUFFER,
@@ -207,14 +134,12 @@ class Dice(Model):
             GL.GL_STATIC_DRAW,
         )
 
-        GL.glBindVertexArray(0)
+        GL.glBindVertexArray(0)        
 
 
     def render(self):
         GL.glBindVertexArray(self.vao)
-        GL.glDrawElements(
-            GL.GL_TRIANGLES, len(self.indices), GL.GL_UNSIGNED_INT, ctypes.c_void_p(0)
-        )
+        GL.glDrawElements(GL.GL_TRIANGLES, len(self.indices), GL.GL_UNSIGNED_INT, None)
         GL.glBindVertexArray(0)
 
     def model_matrix(self):
@@ -231,8 +156,9 @@ class DiceApp(OpenGLApp):
     def __init__(self):
         super().__init__(800, 600, "The Dices Zone")
         self.camera = Camera()
-        self.camera.position = glm.vec3(0.0, 0.0, 0.0)
-
+        self.camera.position = glm.vec3(-24,-24,-24)
+        self.camera.yaw = 45.0
+        self.camera.pitch = 37.0
     def setup(self):
         # Lock the mouse
         sdl2.SDL_SetRelativeMouseMode(sdl2.SDL_TRUE)
@@ -248,6 +174,14 @@ class DiceApp(OpenGLApp):
 
         # Enable texture
         GL.glEnable(GL.GL_TEXTURE_2D)
+
+        #Enable culling
+        GL.glEnable(GL.GL_CULL_FACE)
+
+        # Texture Clamp to border
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_CLAMP_TO_BORDER)
+
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST);
 
         # Pipeline (shaders)
         self.shader = ShaderProgram("SimpleTexture")
@@ -274,14 +208,15 @@ class DiceApp(OpenGLApp):
             s.set_uniform(b"view_matrix", self.camera.get_view_matrix())
             s.set_uniform(b"proj_matrix", self.camera.projection)
             s.set_uniform(b"textureSlot", 0)
-            for i in range(10):
-                for j in range(10):
-                    for k in range(10):
-                        self.dice.position = glm.vec3(i * 2 - 5, j * 2 - 5, k * 2 - 5)
+            n = 10
+            for i in range(n):
+                for j in range(n):
+                    for k in range(n):
+                        self.dice.position = glm.vec3(i * 3 - n/2, j * 3 - n/2, k * 3 - n/2)
                         self.dice.rotation = glm.vec3(
-                            glm.radians(i / 10 * 360) * 45,
-                            glm.radians(j / 10 * 360) * 45,
-                            glm.radians(k / 10 * 360) * 45,
+                            glm.radians(i / n * 360) * 45 * glm.sin(self.frameCount / 100),
+                            glm.radians(j / n * 360) * 45 * glm.sin(self.frameCount / 100),
+                            glm.radians(k / n * 360) * 45 * glm.sin(self.frameCount / 100),
                         )
                         s.set_uniform(b"model_matrix", self.dice.model_matrix())
                         self.dice.render()
@@ -298,7 +233,7 @@ class DiceApp(OpenGLApp):
         self.camera.process_mouse_movement(x.value, y.value)
 
         rich.print(
-            f"Frame rate: {1/(self.frameTime/10000):.2f} FPS \t Frame time: {self.frameTime/self.frameCount:.2f} ms \t Camera Position: {self.camera.position}",
+            f"Camera Position: {self.camera.position}\n",
             end="\r",
         )
 
