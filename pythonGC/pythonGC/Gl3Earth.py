@@ -18,45 +18,110 @@ class sphereModel(Model):
         self.radius = radius
         self.slices = slices
         self.stacks = stacks
-        self.vertices = []
+        self.attr_position = []
         self.indices = []
         self.normals = []
-        self.texcoords = []
-        self.generate()
-        super().__init__(self.vertices, self.indices, self.normals, self.texcoords)
+        self.tex_coords = []
+        self.position = glm.vec3(0.0, 0.0, 0.0)
+        self.rotation = glm.vec3(0.0, 0.0, 0.0)
+        self.scale = glm.vec3(1.0, 1.0, 1.0)
 
-    def generate(self):
+    def load(self):
         latitude = 0
         longitude = 0
         vertices = []
-        for i in range(self.stacks + 1):
-            latitude = i * math.pi / self.stacks
-            sinLat = math.sin(latitude)
-            cosLat = math.cos(latitude)
-            for j in range(self.slices + 1):
-                longitude = j * 2 * math.pi / self.slices
-                sinLong = math.sin(longitude)
-                cosLong = math.cos(longitude)
-                x = cosLong * sinLat
-                y = cosLat
-                z = sinLong * sinLat
-                self.vertices.append([x, y, z])
+        indices = []
+        tex_coords = []
+        normals = []
 
-        
-        self.vertices = array("f", [item for sublist in vertices for item in sublist])
-        self.vao = GL.glGenBuffers(1)
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vao)
+        for i in range(self.stacks + 1):
+            latitude = math.pi * i / self.stacks
+            sinLatitude = math.sin(latitude)
+            cosLatitude = math.cos(latitude)
+
+            for j in range(self.slices + 1):
+                longitude = 2 * math.pi * j / self.slices
+                sinLongitude = math.sin(longitude)
+                cosLongitude = math.cos(longitude)
+
+                x = cosLongitude * sinLatitude
+                y = cosLatitude
+                z = sinLongitude * sinLatitude
+
+                vertices.append([x, y, z])
+                normals.append([x, y, z])
+                tex_coords.append([j / self.slices, i / self.stacks])
+
+        for i in range(self.stacks):
+            for j in range(self.slices):
+                p1 = i * (self.slices + 1) + j
+                p2 = p1 + (self.slices + 1)
+
+                indices.append(p1)
+                indices.append(p2)
+                indices.append(p1 + 1)
+                indices.append(p1 + 1)
+                indices.append(p2)
+                indices.append(p2 + 1)
+
+        self.indices = array("I", indices)
+        self.attr_position = array(
+            "f", [item for sublist in vertices for item in sublist]
+        )
+        self.attr_textureCoord = array(
+            "f", [item for sublist in tex_coords for item in sublist]
+        )
+
+        self.vao = GL.glGenVertexArrays(1)
+        self.vbo = GL.glGenBuffers(1)
+        self.ebo = GL.glGenBuffers(1)
+        self.tbo = GL.glGenBuffers(1)
+
+        GL.glBindVertexArray(self.vao)
+
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vbo)
         GL.glBufferData(
             GL.GL_ARRAY_BUFFER,
-            self.vertices.itemsize * len(self.vertices),
-            ctypes.c_void_p(self.vertices.buffer_info()[0]),
+            self.attr_position.itemsize * len(self.attr_position),
+            ctypes.c_void_p(self.attr_position.buffer_info()[0]),
             GL.GL_STATIC_DRAW,
         )
-        GL.glBindVertexArray(0)
+        GL.glVertexAttribPointer(0, 3, GL.GL_FLOAT, GL.GL_FALSE, 0, None)
+        GL.glEnableVertexAttribArray(0)
+
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.tbo)
+        GL.glBufferData(
+            GL.GL_ARRAY_BUFFER,
+            self.attr_textureCoord.itemsize * len(self.attr_textureCoord),
+            ctypes.c_void_p(self.attr_textureCoord.buffer_info()[0]),
+            GL.GL_STATIC_DRAW,
+        )
+        GL.glVertexAttribPointer(1, 2, GL.GL_FLOAT, GL.GL_FALSE, 0, None)
+        GL.glEnableVertexAttribArray(1)
+
+        GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.ebo)
+        GL.glBufferData(
+            GL.GL_ELEMENT_ARRAY_BUFFER,
+            self.indices.itemsize * len(self.indices),
+            ctypes.c_void_p(self.indices.buffer_info()[0]),
+            GL.GL_STATIC_DRAW,
+        )
+
+        GL.glBindVertexArray(0)  # Unbind
 
     def render(self):
         GL.glBindVertexArray(self.vao)
-        GL.glDrawArrays(GL.GL_POINTS, 0, len(self.vertices))
+        GL.glDrawElements(GL.GL_TRIANGLES, len(self.indices), GL.GL_UNSIGNED_INT, None)
+        GL.glBindVertexArray(0)
+
+    def model_matrix(self):
+        mat4 = glm.mat4(1.0)
+        mat4 = glm.translate(mat4, self.position)
+        mat4 = glm.rotate(mat4, glm.radians(self.rotation.x), glm.vec3(1.0, 0.0, 0.0))
+        mat4 = glm.rotate(mat4, glm.radians(self.rotation.y), glm.vec3(0.0, 1.0, 0.0))
+        mat4 = glm.rotate(mat4, glm.radians(self.rotation.z), glm.vec3(0.0, 0.0, 1.0))
+        mat4 = glm.scale(mat4, self.scale)
+        return mat4
 
 
 class Earth(OpenGLApp):
@@ -82,8 +147,11 @@ class Earth(OpenGLApp):
         # Enable texture
         GL.glEnable(GL.GL_TEXTURE_2D)
 
+        # texture filtering none
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST)
+
         # Pipeline (shaders)
-        self.shader = ShaderProgram("WhiteDotsPipeline")
+        self.shader = ShaderProgram("SimpleTexture")
         self.shader.compile_shader()
         self.shader.link()
 
@@ -92,21 +160,13 @@ class Earth(OpenGLApp):
 
         # Texture
         GL.glActiveTexture(GL.GL_TEXTURE0)
-        self.texture = Texture("./textures/uv_grid_opengl.png")
+        self.texture = Texture("./textures/world_map.png")
         self.texture.load()
 
         # Model
         self.model = sphereModel(0.5, 20, 20)
-
-    def render(self):
-        GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
-
-        with self.shader as s:
-            s.set_uniform(b"model_matrix", glm.mat4(1.0))
-            s.set_uniform(b"view_matrix", self.camera.get_view_matrix())
-            s.set_uniform(b"proj_matrix", self.camera.projection) 
-            self.model.render()
-        GL.glBindVertexArray(0)
+        self.model.load()
+        self.model.rotation.x = 180
 
     def update(self):
         cameraSpeed = 0.1
@@ -123,6 +183,17 @@ class Earth(OpenGLApp):
             f"Frame rate: {1/(self.frameTime/10000):.2f} FPS \t Frame time: {self.frameTime/self.frameCount:.2f} ms \t Camera Position: {self.camera.position}",
             end="\r",
         )
+
+    def render(self):
+        GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
+
+        with self.shader as s:
+            self.model.rotation.y += 0.1
+            s.set_uniform(b"model_matrix", self.model.model_matrix())
+            s.set_uniform(b"view_matrix", self.camera.get_view_matrix())
+            s.set_uniform(b"proj_matrix", self.camera.projection)
+            self.model.render()
+        GL.glBindVertexArray(0)
 
 
 if __name__ == "__main__":

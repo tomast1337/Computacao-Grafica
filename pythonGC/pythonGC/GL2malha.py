@@ -18,11 +18,8 @@ def funcOFxy(x, y):
     return random() / 5
 
 
-class UVsphere(BasicOpenGLApp):
+class malha(BasicOpenGLApp):
     def __init__(self, full_screen=True):
-        """
-        Esse exemplo desenha um prisma.
-        """
         super().__init__(
             width=800,
             height=600,
@@ -109,5 +106,5 @@ class UVsphere(BasicOpenGLApp):
 
 
 if __name__ == "__main__":
-    app = UVsphere()
+    app = malha()
     app.run()
