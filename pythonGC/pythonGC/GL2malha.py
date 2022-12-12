@@ -15,7 +15,8 @@ PI = 3.1415926535897932384626433832795
 
 
 def funcOFxy(x, y):
-    return random() / 5
+    #return random() / 5
+    return 0.5 * sin(PI * x / 10) * cos(PI * y / 10)
 
 
 class malha(BasicOpenGLApp):
@@ -31,7 +32,7 @@ class malha(BasicOpenGLApp):
         self.faces = []
         self.cores = []
 
-        r = 10
+        r = 20
         for i in range(r):
             for j in range(r):
                 self.vertices.append(
