@@ -1,4 +1,5 @@
 # pythonGC
+## Dependências
 Para rota os programas dessa pasta é necessário as seguintes dependerias:
 - python 3.8
 - commonmark
@@ -21,6 +22,8 @@ Mas recomendo usar o poetry para instalar as dependências em um ambiente virtua
 poetry install
 poetry shell
 ```
+
+## Execução
 
 Para executar os programas e necessário executados a partir da pasta raiz do projeto da seguinte forma:
 ```bash
